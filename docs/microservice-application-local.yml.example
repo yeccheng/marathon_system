@@ -1,0 +1,22 @@
+# ========== 微服务共用 application-local 引导片段 ==========
+# 将下列内容分别复制到各服务：
+#   marathon-event/src/main/resources/application-local.yml
+#   marathon-registration/src/main/resources/application-local.yml
+#   marathon-result/src/main/resources/application-local.yml
+# （application-local.yml 已 gitignore，勿提交真实密码）
+#
+# 也可直接复制各模块内的 application-local.yml.example 后改密码。
+
+spring:
+  datasource:
+    username: root
+    password: "YOUR_MYSQL_PASSWORD"
+  redis:
+    # 本机 Redis 无密码则删掉 password 或留空字符串
+    password: "YOUR_REDIS_PASSWORD"
+
+# 仅 marathon-event 需要上传目录（其它服务可省略）
+marathon:
+  upload:
+    path: uploads/
+    url-prefix: /uploads/

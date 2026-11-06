@@ -1,0 +1,8 @@
+# 复制为同目录 application-local.yml 后按本机修改（可选）
+# cp application-local.yml.example application-local.yml
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848

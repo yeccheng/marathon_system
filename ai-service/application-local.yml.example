@@ -1,0 +1,9 @@
+# 复制为 application-local.yml 后填入 DeepSeek 密钥
+spring:
+  ai:
+    openai:
+      api-key: sk-your-deepseek-api-key
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat

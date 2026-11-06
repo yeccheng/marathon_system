@@ -1,0 +1,220 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-0000-4000-8000-marathon000001",
+    "name": "马拉松赛事管理系统 API",
+    "description": "对照《马拉松.pdf》设计文档生成的接口集合。基础地址 http://localhost:8080，5 大模块 22 个接口。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "模块1 赛事管理 /api/event",
+      "item": [
+        {
+          "name": "1. 新增赛事",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/event/add",
+            "body": {"mode": "raw", "raw": "{\n  \"eventName\": \"2026西安国际马拉松\",\n  \"eventType\": 1,\n  \"eventDate\": \"2026-11-15\",\n  \"startLocation\": \"西安大明宫国家遗址公园\",\n  \"distanceKm\": 42.195,\n  \"quota\": 15000,\n  \"entryFee\": 200.00,\n  \"status\": 0\n}"}
+          }
+        },
+        {
+          "name": "2. 修改赛事",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/event/update",
+            "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"eventName\": \"2026西安国际马拉松\",\n  \"eventType\": 1,\n  \"eventDate\": \"2026-11-15\",\n  \"startLocation\": \"西安大明宫国家遗址公园\",\n  \"distanceKm\": 42.195,\n  \"quota\": 16000,\n  \"entryFee\": 200.00,\n  \"status\": 0\n}"}
+          }
+        },
+        {
+          "name": "3. 分页查询赛事列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/event/list?pageNum=1&pageSize=10&eventName=西安&eventType=1&status=0&startDate=2026-10-01&endDate=2026-12-31"
+          }
+        },
+        {
+          "name": "4. 查询赛事详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/event/detail/1"
+          }
+        },
+        {
+          "name": "5. 删除赛事",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "http://localhost:8080/api/event/delete/2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "模块2 选手管理 /api/runner",
+      "item": [
+        {
+          "name": "1. 新增选手",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/runner/add",
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"张三\",\n  \"gender\": 1,\n  \"idCard\": \"610104199503101234\",\n  \"phone\": \"13800138000\",\n  \"birthDate\": \"1995-03-10\",\n  \"emergencyContact\": \"李四,13900139000\"\n}"}
+          }
+        },
+        {
+          "name": "2. 修改选手",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/runner/update",
+            "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"name\": \"张三\",\n  \"gender\": 1,\n  \"idCard\": \"610104199503101234\",\n  \"phone\": \"13800138888\",\n  \"birthDate\": \"1995-03-10\",\n  \"emergencyContact\": \"李四,13900139000\"\n}"}
+          }
+        },
+        {
+          "name": "3. 分页查询选手列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/runner/list?pageNum=1&pageSize=10&name=张&phone=138"
+          }
+        },
+        {
+          "name": "4. 查询选手详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/runner/detail/1"
+          }
+        },
+        {
+          "name": "5. 删除选手",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "http://localhost:8080/api/runner/delete/2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "模块3 赛事报名 /api/register",
+      "item": [
+        {
+          "name": "1. 提交报名",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/register/submit",
+            "body": {"mode": "raw", "raw": "{\n  \"eventId\": 1,\n  \"runnerId\": 1\n}"}
+          }
+        },
+        {
+          "name": "2. 取消报名",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/register/cancel",
+            "body": {"mode": "raw", "raw": "{\n  \"registrationId\": 1001\n}"}
+          }
+        },
+        {
+          "name": "3. 分配号码布",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/register/bib",
+            "body": {"mode": "raw", "raw": "{\n  \"registrationId\": 1001,\n  \"bibNumber\": \"A0001\"\n}"}
+          }
+        },
+        {
+          "name": "4. 分页查询报名名单",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/register/list?pageNum=1&pageSize=10&eventId=1&name=张"
+          }
+        },
+        {
+          "name": "5. 查询报名详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/register/detail/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "模块4 比赛成绩 /api/result",
+      "item": [
+        {
+          "name": "1. 录入选手成绩",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/result/input",
+            "body": {"mode": "raw", "raw": "{\n  \"registrationId\": 1001,\n  \"chipTime\": 12800,\n  \"netTime\": 12560,\n  \"finishStatus\": 1,\n  \"finishTime\": \"2026-11-15 10:29:20\"\n}"}
+          }
+        },
+        {
+          "name": "2. 修改成绩",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/api/result/update",
+            "body": {"mode": "raw", "raw": "{\n  \"id\": 2001,\n  \"registrationId\": 1001,\n  \"chipTime\": 12800,\n  \"netTime\": 12550,\n  \"finishStatus\": 1,\n  \"finishTime\": \"2026-11-15 10:29:10\"\n}"}
+          }
+        },
+        {
+          "name": "3. 赛事总排名",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/result/eventRanking/1?pageNum=1&pageSize=10"
+          }
+        },
+        {
+          "name": "4. 男女分组排名",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/result/genderRanking/1?pageNum=1&pageSize=10"
+          }
+        },
+        {
+          "name": "5. 年龄分组排名",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/result/ageRanking/1?pageNum=1&pageSize=10"
+          }
+        },
+        {
+          "name": "6. 分页查询成绩记录",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/result/list?pageNum=1&pageSize=10&eventId=1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "模块5 统计看板 /api/statistics",
+      "item": [
+        {
+          "name": "1. 单场赛事统计总览",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/statistics/eventOverview/1"
+          }
+        }
+      ]
+    }
+  ]
+}

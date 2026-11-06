@@ -1,0 +1,34 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: marathon-ai-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  config:
+    # 密钥：ai-service/application-local.yml（已 gitignore）或环境变量 DEEPSEEK_API_KEY
+    import: optional:file:./application-local.yml
+  ai:
+    openai:
+      # DeepSeek OpenAI 兼容（Spring AI 会自动拼 /v1/chat/completions）
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com
+      # Tool Calling + 结构化输出可能多轮，给足超时
+      timeout: 120s
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.2
+
+# 经 Gateway 调公开赛事 API（微服务后入口仍为 8081）
+marathon:
+  base-url: http://localhost:8081
+
+logging:
+  level:
+    com.ape.marathon.ai: DEBUG
+    org.springframework.ai: INFO
+

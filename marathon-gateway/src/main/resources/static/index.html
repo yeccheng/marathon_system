@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>发令台 GUNSTART — 赛事公开平台</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="/assets/css/site.css?v=20261102a" />
+</head>
+<body>
+  <header class="site-nav">
+    <a class="brand" href="#home" aria-label="发令台首页">
+      <span class="brand-cn">发令台</span>
+      <span class="brand-en">Gunstart</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#home" data-nav="home">首页</a>
+      <a href="#events" data-nav="events">报名中</a>
+      <a href="#archive" data-nav="archive">历史赛事</a>
+      <a href="#my" data-nav="my">我的报名</a>
+      <a href="#rank" data-nav="rank">公开排名</a>
+      <a href="#assistant" data-nav="assistant">赛事助手</a>
+      <a href="#faq" data-nav="faq">常见问题</a>
+    </nav>
+  </header>
+
+  <!-- HOME -->
+  <section class="view is-active" data-view="home">
+    <div class="hero">
+      <div class="hero-media" aria-hidden="true"></div>
+      <div class="hero-body">
+        <p class="hero-official anim-rise">西安国际马拉松系 · 官方报名与成绩通道</p>
+        <h1 class="hero-brand anim-rise">发令台<span>GUNSTART</span></h1>
+        <div class="hero-line anim-rise-d1" aria-hidden="true"></div>
+        <p class="hero-copy anim-rise-d2">城墙之下，枪声之后。完成报名、领取确认函，赛后取回你的成绩证明——由组委会授权公开呈现。</p>
+        <div class="hero-actions anim-rise-d3">
+          <a class="btn btn-signal" href="#events">立即报名</a>
+          <a class="btn btn-ghost" href="#my">我的报名 / 查成绩</a>
+          <a class="btn btn-ghost" href="#assistant">问赛事助手</a>
+        </div>
+        <p class="hero-meta anim-rise-d3">组委会授权 · 客服 029-8888-2026 · 报名费含基础意外险</p>
+      </div>
+    </div>
+    <div class="official-bar">
+      <div class="official-bar-inner">
+        <div><strong>主办</strong><span>西安市体育局 · 西安文旅</span></div>
+        <div><strong>承办</strong><span>发令台赛事中心</span></div>
+        <div><strong>官方热线</strong><span>029-8888-2026</span></div>
+        <div><strong>成绩认证</strong><span>芯片计时 · 完赛证书</span></div>
+      </div>
+    </div>
+    <div class="sponsor-strip" aria-label="合作伙伴">
+      <span class="sponsor-kicker">官方合作伙伴</span>
+      <div class="sponsor-logos">
+        <span>西安文旅</span><span>发令台运动</span><span>秦岭矿泉水</span><span>长安保险</span><span>城墙文创</span>
+      </div>
+    </div>
+    <div class="section home-quick">
+      <a class="quick-tile" href="#my">
+        <strong>我的报名</strong>
+        <span>确认函 · 号码布 · 成绩证明</span>
+      </a>
+      <a class="quick-tile" href="#rank">
+        <strong>公开排名</strong>
+        <span>枪声成绩 · 名次对照</span>
+      </a>
+      <a class="quick-tile" href="#events">
+        <strong>正在报名</strong>
+        <span>名额与报名费一览</span>
+      </a>
+    </div>
+    <div class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">OPEN NOW</div>
+          <h2 class="section-title">正在报名</h2>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="#events">全部赛事</a>
+      </div>
+      <div id="homeEvents" class="event-list"></div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="view" data-view="events">
+    <div class="section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">EVENTS</div>
+          <h2 class="section-title">报名中的赛事</h2>
+          <p class="section-sub">报名中场次可直接点「我要报名」。查往年成绩请看「历史赛事」。</p>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="#archive">历史赛事</a>
+      </div>
+      <div id="eventsMount" class="event-list"></div>
+    </div>
+  </section>
+
+  <!-- ARCHIVE / 历史赛事 -->
+  <section class="view" data-view="archive">
+    <div class="section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">ARCHIVE</div>
+          <h2 class="section-title">全部赛事</h2>
+          <p class="section-sub">含报名截止与已结束场次。点「查成绩」进入公开榜，点「详情」看赛道信息。</p>
+        </div>
+      </div>
+      <div id="archiveMount" class="event-list"></div>
+    </div>
+  </section>
+
+  <!-- EVENT DETAIL -->
+  <section class="view" data-view="event">
+    <div id="eventDetail"></div>
+  </section>
+
+  <!-- SIGNUP -->
+  <section class="view" data-view="signup">
+    <div class="section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">SIGN UP</div>
+          <h2 class="section-title">我要报名</h2>
+          <p class="section-sub" id="signupMsg">填写选手信息并提交报名。</p>
+        </div>
+      </div>
+      <input type="hidden" id="signupEventId" />
+      <div class="steps" id="signupSteps" aria-label="报名步骤">
+        <div class="step is-on"><span>1</span>填写资料</div>
+        <div class="step"><span>2</span>确认支付</div>
+        <div class="step"><span>3</span>报名完成</div>
+      </div>
+      <div class="panel">
+        <div class="form-grid">
+          <div class="field"><label for="suName">姓名</label><input id="suName" placeholder="与证件一致" autocomplete="off" /></div>
+          <div class="field">
+            <label for="suGender">性别</label>
+            <select id="suGender"><option value="1">男</option><option value="2">女</option></select>
+          </div>
+          <div class="field"><label for="suIdCard">身份证号</label><input id="suIdCard" maxlength="18" placeholder="18 位" autocomplete="off" /></div>
+          <div class="field"><label for="suPhone">手机号</label><input id="suPhone" maxlength="11" placeholder="用于登录与查成绩" autocomplete="off" /></div>
+          <div class="field">
+            <label for="suBirth">出生日期 <span class="req">*</span></label>
+            <input id="suBirth" type="date" required placeholder="年/月/日" />
+            <p class="field-tip">必填；填完 18 位身份证后会自动带出，也可手动选择</p>
+          </div>
+          <div class="field">
+            <label for="suShirt">参赛服尺码</label>
+            <select id="suShirt">
+              <option value="">请选择</option>
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+          <div class="field"><label for="suEmName">紧急联系人姓名</label><input id="suEmName" placeholder="姓名" autocomplete="off" /></div>
+          <div class="field"><label for="suEmPhone">紧急联系人电话</label><input id="suEmPhone" maxlength="11" placeholder="11 位手机号" autocomplete="off" /></div>
+        </div>
+        <div style="margin-top:1.1rem;display:flex;gap:.65rem;flex-wrap:wrap">
+          <button type="button" class="btn btn-signal" id="btnSignupSubmit">提交并去支付</button>
+          <a class="btn btn-ghost" href="#events">返回赛事</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY / 个人中心 -->
+  <section class="view" data-view="my">
+    <div class="section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">RUNNER CENTER</div>
+          <h2 class="section-title">个人中心</h2>
+          <p class="section-sub">验证码登录后查看完整资料、确认函下载与退赛；未登录仅可脱敏查成绩。</p>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:1.25rem" id="loginPanel">
+        <div class="form-grid" style="align-items:end">
+          <div class="field">
+            <label for="myPhone">手机号</label>
+            <input id="myPhone" type="tel" maxlength="11" placeholder="报名预留手机号" />
+          </div>
+          <div class="field">
+            <label for="myOtp">验证码</label>
+            <input id="myOtp" type="text" maxlength="6" placeholder="6 位" />
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost" id="btnSendOtp">获取验证码</button>
+            <button type="button" class="btn btn-signal" id="btnOtpLogin">登录</button>
+            <button type="button" class="btn btn-ghost" id="btnMyQuery">脱敏查成绩</button>
+          </div>
+        </div>
+        <p class="cta-hint" id="otpHint" style="margin-top:.7rem">建议验证码登录。脱敏查询仅显示部分信息，保护隐私。</p>
+      </div>
+      <div id="sessionBar" class="panel" style="display:none;margin-bottom:1rem"></div>
+      <div id="noticeMount" style="margin-bottom:1rem"></div>
+      <div id="myResult"></div>
+    </div>
+  </section>
+
+  <!-- RANK -->
+  <section class="view" data-view="rank">
+    <div class="section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">LEADERBOARD</div>
+          <h2 class="section-title">公开排名</h2>
+          <p class="section-sub">下拉可选全部赛事（含历史场次）。名次 / 号码布 / 枪声 / 净成绩同屏对照。</p>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:1.25rem">
+        <div class="form-grid" style="align-items:end">
+          <div class="field">
+            <label for="rankEvent">赛事</label>
+            <select id="rankEvent"></select>
+          </div>
+          <div class="field">
+            <label for="rankKeyword">关键词</label>
+            <input id="rankKeyword" type="text" placeholder="姓名 / 号码布" />
+          </div>
+          <div class="field">
+            <label for="rankBibPrefix">号码段</label>
+            <input id="rankBibPrefix" type="text" maxlength="6" placeholder="如 A / A00 / B0" />
+          </div>
+          <div class="field">
+            <label for="rankProvince">省份</label>
+            <select id="rankProvince">
+              <option value="">全部省份</option>
+              <option value="61">陕西</option>
+              <option value="11">北京</option>
+              <option value="31">上海</option>
+              <option value="44">广东</option>
+              <option value="51">四川</option>
+              <option value="33">浙江</option>
+              <option value="32">江苏</option>
+              <option value="37">山东</option>
+              <option value="42">湖北</option>
+              <option value="43">湖南</option>
+              <option value="41">河南</option>
+              <option value="50">重庆</option>
+              <option value="12">天津</option>
+              <option value="13">河北</option>
+              <option value="14">山西</option>
+              <option value="34">安徽</option>
+              <option value="35">福建</option>
+              <option value="36">江西</option>
+              <option value="45">广西</option>
+              <option value="53">云南</option>
+              <option value="52">贵州</option>
+              <option value="62">甘肃</option>
+              <option value="64">宁夏</option>
+              <option value="65">新疆</option>
+            </select>
+          </div>
+          <div>
+            <button type="button" class="btn btn-signal" id="btnRankQuery">查询排名</button>
+          </div>
+        </div>
+        <p class="cta-hint" style="margin-top:.7rem">可按号码段前缀、省份筛选。年龄组：U29≤29 · M30=30–39 · M40=40–49 · M50+=50+。</p>
+      </div>
+      <div id="rankMount"></div>
+    </div>
+  </section>
+
+  <!-- ASSISTANT -->
+  <section class="view" data-view="assistant">
+    <div class="section assistant-section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">ASSISTANT</div>
+          <h2 class="section-title">赛事助手</h2>
+          <p class="section-desc">自然语言查报名中赛事、名额与费用。回答基于系统实时数据，不编造。</p>
+        </div>
+      </div>
+      <div class="assistant-shell">
+        <div class="assistant-chips" id="assistantChips" aria-label="快捷提问">
+          <button type="button" class="chip" data-q="现在有哪些可以报名的马拉松？">可报名赛事</button>
+          <button type="button" class="chip" data-q="西安城墙相关比赛还剩多少名额？">城墙名额</button>
+          <button type="button" class="chip" data-q="半程马拉松报名费大概多少？">半程费用</button>
+        </div>
+        <div class="assistant-log" id="assistantLog" aria-live="polite"></div>
+        <form class="assistant-form" id="assistantForm">
+          <label class="sr-only" for="assistantInput">提问</label>
+          <textarea id="assistantInput" rows="2" placeholder="例如：还有哪些全程赛可以报名？" required></textarea>
+          <button type="submit" class="btn btn-signal" id="assistantSend">提问</button>
+        </form>
+        <p class="cta-hint" id="assistantHint">AI 助手经网关 /api/ai · 需 marathon-ai-service 已注册</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="view" data-view="faq">
+    <div class="section" style="padding-top:6.5rem">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">FAQ</div>
+          <h2 class="section-title">常见问题</h2>
+        </div>
+      </div>
+      <div class="guide-grid" id="faqMount"></div>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    <div>发令台 GUNSTART · 西马气质赛事公开平台 · 客服 029-8888-2026</div>
+    <div class="foot-links">
+      <a href="#assistant">赛事助手</a>
+      <a href="#faq">常见问题</a>
+      <a href="#my">我的报名</a>
+      <a href="#events">立即报名</a>
+    </div>
+  </footer>
+
+  <div class="share-mask" id="shareMask" aria-hidden="true">
+    <div class="share-box">
+      <canvas id="shareCanvas" width="720" height="960"></canvas>
+      <div class="share-actions">
+        <button type="button" class="btn btn-signal btn-sm" id="shareDownload">保存图片</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="shareCopyText">复制文案</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="shareClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="share-mask" id="inviteMask" aria-hidden="true">
+    <div class="share-box invite-box">
+      <div class="section-kicker">INVITE</div>
+      <h3 style="margin:.35rem 0 .55rem;font-family:var(--display);font-size:1.7rem">邀请跑团好友</h3>
+      <p class="muted" id="invitePreview" style="white-space:pre-line;margin-bottom:.75rem"></p>
+      <div class="invite-link" id="inviteLink"></div>
+      <div class="share-actions">
+        <button type="button" class="btn btn-signal btn-sm" id="inviteCopy">复制邀请文案</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="inviteCopyLink">只复制链接</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="inviteClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/assets/js/api.js?v=20261102a"></script>
+  <script src="/assets/js/public-app.js?v=20261102a"></script>
+</body>
+</html>

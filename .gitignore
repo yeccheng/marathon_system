@@ -1,0 +1,41 @@
+# Build
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.log
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local secrets / machine-specific Spring profile（勿提交密码与本机绝对路径）
+**/application-local.yml
+**/src/main/resources/application-local.yml
+ai-service/application-local.yml
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Uploaded user files（保留目录占位 + 答辩示例封面）
+uploads/*
+!uploads/.gitkeep
+!uploads/README.md
+!uploads/demo-cover-*.jpg
+
+# AI service bundled JDK
+ai-service/.jdk/
+
+# Backup / compile noise
+*.bak
+*.bak-*
+*.orig

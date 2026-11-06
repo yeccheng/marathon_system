@@ -1,0 +1,16 @@
+# 复制为同目录 application-local.yml 后按本机修改（该文件已加入 .gitignore，勿提交）
+# cp application-local.yml.example application-local.yml
+
+spring:
+  datasource:
+    username: root
+    password: "123456"
+  redis:
+    # 本机 Redis 无密码则删掉 password 或留空字符串
+    password: redis@2026
+
+marathon:
+  upload:
+    # Windows 可用绝对路径；也可用相对路径 uploads/
+    path: uploads/
+    url-prefix: /uploads/

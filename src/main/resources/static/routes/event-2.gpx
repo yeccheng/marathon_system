@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Gunstart" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>2026 Xian City Wall Half</name></metadata>
+  <trk><name>Half 21.1km</name><trkseg>
+    <trkpt lat="34.2580" lon="108.9420"><ele>410</ele></trkpt>
+    <trkpt lat="34.2600" lon="108.9480"><ele>412</ele></trkpt>
+    <trkpt lat="34.2620" lon="108.9540"><ele>414</ele></trkpt>
+    <trkpt lat="34.2640" lon="108.9600"><ele>416</ele></trkpt>
+    <trkpt lat="34.2660" lon="108.9660"><ele>418</ele></trkpt>
+    <trkpt lat="34.2680" lon="108.9600"><ele>416</ele></trkpt>
+    <trkpt lat="34.2700" lon="108.9540"><ele>414</ele></trkpt>
+    <trkpt lat="34.2680" lon="108.9480"><ele>412</ele></trkpt>
+    <trkpt lat="34.2640" lon="108.9440"><ele>411</ele></trkpt>
+    <trkpt lat="34.2600" lon="108.9420"><ele>410</ele></trkpt>
+    <trkpt lat="34.2580" lon="108.9420"><ele>410</ele></trkpt>
+  </trkseg></trk>
+</gpx>

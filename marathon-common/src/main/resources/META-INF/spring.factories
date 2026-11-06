@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.ape.marathon.config.JwtAutoConfiguration,\
+com.ape.marathon.config.RedisConfig

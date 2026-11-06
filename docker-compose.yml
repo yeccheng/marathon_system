@@ -1,0 +1,66 @@
+# 中间件：MySQL + Redis + Nacos（业务服务仍在本机 IDE/Maven 启动）
+# 密码与 docs/答辩环境配置说明.md 演示约定一致
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: marathon-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: marathon_system
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - marathon-mysql-data:/var/lib/mysql
+      # 首次启动自动建库建表（仅空数据卷时执行一次）
+      - ./docs/数据库脚本/marathon_system.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: marathon-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "redis@2026"]
+    volumes:
+      - marathon-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis@2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: marathon-nacos
+    restart: unless-stopped
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      NACOS_AUTH_ENABLE: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8848/nacos/"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+volumes:
+  marathon-mysql-data:
+  marathon-redis-data:

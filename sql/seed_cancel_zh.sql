@@ -1,0 +1,1 @@
+UPDATE marathon_event SET cancel_rule='比赛日前7天（不含比赛日）可在线退赛并释放名额；此后仅支持现场医务退赛。演示环境退赛不产生真实退款，仅更新状态。' WHERE id=1;

@@ -1,0 +1,84 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: marathon-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # 登录 -> auth（更具体，优先）
+        - id: marathon-auth-login
+          uri: lb://marathon-auth
+          order: 1
+          predicates:
+            - Path=/api/login
+
+        # 公开成绩统计 / 排行 -> result
+        - id: marathon-result-public-stats
+          uri: lb://marathon-result
+          order: 2
+          predicates:
+            - Path=/api/public/event/*/stats
+        - id: marathon-result-public-rank
+          uri: lb://marathon-result
+          order: 3
+          predicates:
+            - Path=/api/public/rank/**
+
+        # 公开赛事 -> event
+        - id: marathon-event-public
+          uri: lb://marathon-event
+          order: 4
+          predicates:
+            - Path=/api/public/events/**,/api/public/event/**
+
+        # 公开报名相关 -> registration
+        - id: marathon-registration-public
+          uri: lb://marathon-registration
+          order: 5
+          predicates:
+            - Path=/api/public/signup,/api/public/confirmPay,/api/public/otp/**,/api/public/cancel,/api/public/notices,/api/public/my
+
+        # 管理端赛事 / 上传 -> event
+        - id: marathon-event-admin
+          uri: lb://marathon-event
+          order: 10
+          predicates:
+            - Path=/api/event/**,/uploads/**
+
+        # 管理端选手 / 报名 -> registration
+        - id: marathon-registration-admin
+          uri: lb://marathon-registration
+          order: 11
+          predicates:
+            - Path=/api/runner/**,/api/register/**
+
+        # 成绩 / 统计 -> result
+        - id: marathon-result-admin
+          uri: lb://marathon-result
+          order: 12
+          predicates:
+            - Path=/api/result/**,/api/statistics/**
+
+        # AI 助手
+        - id: marathon-ai
+          uri: lb://marathon-ai-service
+          order: 20
+          predicates:
+            - Path=/api/ai/**
+
+jwt:
+  secret: marathon-jwt-secret-key-2026-must-be-long-enough
+  expire: 7200000
+
+logging:
+  level:
+    com.ape.marathon: debug
+    org.springframework.cloud.gateway: info

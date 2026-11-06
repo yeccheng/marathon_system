@@ -1,0 +1,9 @@
+target/
+.idea/
+*.iml
+.jdk/
+*.log
+# 本地密钥（模块根目录），勿提交
+/application-local.yml
+.env
+*.key

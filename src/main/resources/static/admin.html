@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>发令台管理台 — GUNSTART Console</title>
+  <link rel="stylesheet" href="/assets/css/site.css" />
+</head>
+<body class="admin-body">
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box anim-rise">
+      <div class="brand">
+        <span class="brand-cn">发令台</span>
+        <span class="brand-en">Gunstart</span>
+      </div>
+      <h1>管理台登录</h1>
+      <p>工作人员入口。登录后管理赛事、选手、报名与成绩。</p>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="field">
+          <label for="loginUser">用户名</label>
+          <input id="loginUser" autocomplete="username" value="admin" />
+        </div>
+        <div class="field">
+          <label for="loginPass">密码</label>
+          <input id="loginPass" type="password" autocomplete="current-password" />
+        </div>
+        <button type="button" class="btn btn-signal" id="btnLogin">进入控制台</button>
+        <a class="muted" href="/" style="text-align:center;margin-top:.35rem">返回选手端</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminShell" class="admin-shell" style="display:none">
+    <aside class="admin-side">
+      <div class="brand">
+        <span class="brand-cn">发令台</span>
+        <span class="brand-en">Admin</span>
+      </div>
+      <button type="button" class="side-btn active" data-panel="overview">赛事总览</button>
+      <button type="button" class="side-btn" data-panel="events">赛事管理</button>
+      <button type="button" class="side-btn" data-panel="runners">选手档案</button>
+      <button type="button" class="side-btn" data-panel="registers">报名管理</button>
+      <button type="button" class="side-btn" data-panel="results">成绩管理</button>
+      <button type="button" class="side-btn" data-panel="ranks">成绩排名</button>
+      <div class="side-foot">
+        <div>JWT 会话</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnLogout" style="margin-top:.55rem">退出登录</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-top">
+        <h2 id="pageTitle">赛事总览</h2>
+        <div class="spacer"></div>
+        <a class="btn btn-ghost btn-sm" href="/" target="_blank">选手端</a>
+        <a class="btn btn-ghost btn-sm" href="/doc.html" target="_blank">API 文档</a>
+      </div>
+
+      <!-- overview -->
+      <section class="panel-view" data-panel="overview">
+        <div class="toolbar">
+          <div class="field">
+            <label for="ovEvent">赛事</label>
+            <select id="ovEvent"></select>
+          </div>
+          <button type="button" class="btn btn-signal btn-sm" id="btnOvRefresh">刷新</button>
+        </div>
+        <div id="ovStats"></div>
+      </section>
+
+      <!-- events -->
+      <section class="panel-view" data-panel="events" style="display:none">
+        <div class="toolbar">
+          <div class="field"><label>名称</label><input id="evName" placeholder="模糊搜索" /></div>
+          <div class="field">
+            <label>类型</label>
+            <select id="evType">
+              <option value="">全部</option>
+              <option value="1">全程</option>
+              <option value="2">半程</option>
+              <option value="3">迷你</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>状态</label>
+            <select id="evStatus">
+              <option value="">全部</option>
+              <option value="0">报名中</option>
+              <option value="1">报名截止</option>
+              <option value="2">已结束</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnEvSearch">查询</button>
+          <button type="button" class="btn btn-signal btn-sm" id="btnEvAdd">新增赛事</button>
+        </div>
+        <div id="evTable"></div>
+        <div class="pager" id="evPager"></div>
+      </section>
+
+      <!-- runners -->
+      <section class="panel-view" data-panel="runners" style="display:none">
+        <div class="toolbar">
+          <div class="field"><label>姓名</label><input id="rnName" /></div>
+          <div class="field"><label>手机</label><input id="rnPhone" /></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnRnSearch">查询</button>
+          <button type="button" class="btn btn-signal btn-sm" id="btnRnAdd">新增选手</button>
+        </div>
+        <div id="rnTable"></div>
+        <div class="pager" id="rnPager"></div>
+      </section>
+
+      <!-- registers -->
+      <section class="panel-view" data-panel="registers" style="display:none">
+        <div class="toolbar">
+          <div class="field"><label>赛事</label><select id="rgEvent"></select></div>
+          <div class="field"><label>选手姓名</label><input id="rgName" /></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnRgSearch">查询</button>
+          <button type="button" class="btn btn-signal btn-sm" id="btnRgAdd">提交报名</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnRgExport">导出 Excel</button>
+        </div>
+        <div id="rgTable"></div>
+        <div class="pager" id="rgPager"></div>
+      </section>
+
+      <!-- results -->
+      <section class="panel-view" data-panel="results" style="display:none">
+        <div class="toolbar">
+          <div class="field"><label>赛事</label><select id="rsEvent"></select></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnRsSearch">查询</button>
+          <button type="button" class="btn btn-signal btn-sm" id="btnRsAdd">录入成绩</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnRsExport">导出 Excel</button>
+        </div>
+        <div id="rsTable"></div>
+        <div class="pager" id="rsPager"></div>
+      </section>
+
+      <!-- ranks -->
+      <section class="panel-view" data-panel="ranks" style="display:none">
+        <div class="toolbar">
+          <div class="field"><label>赛事</label><select id="rkEvent"></select></div>
+          <div class="field">
+            <label>榜单</label>
+            <select id="rkMode">
+              <option value="event">总排名</option>
+              <option value="gender">性别分组</option>
+              <option value="age">年龄分组</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-signal btn-sm" id="btnRkSearch">查询</button>
+        </div>
+        <div id="rkTable"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="modalMask">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">编辑</h3>
+
+      <div class="form-grid" data-form="event">
+        <div class="field" style="grid-column:1/-1"><label>赛事名称</label><input id="f_eventName" /></div>
+        <div class="field">
+          <label>类型</label>
+          <select id="f_eventType">
+            <option value="1">全程</option>
+            <option value="2">半程</option>
+            <option value="3">迷你</option>
+          </select>
+        </div>
+        <div class="field"><label>比赛日</label><input id="f_eventDate" type="date" /></div>
+        <div class="field"><label>起点</label><input id="f_startLocation" /></div>
+        <div class="field"><label>距离(km)</label><input id="f_distanceKm" type="number" step="0.1" /></div>
+        <div class="field"><label>名额</label><input id="f_quota" type="number" /></div>
+        <div class="field"><label>报名费</label><input id="f_entryFee" type="number" step="0.01" /></div>
+        <div class="field">
+          <label>状态</label>
+          <select id="f_status">
+            <option value="0">报名中</option>
+            <option value="1">报名截止</option>
+            <option value="2">已结束</option>
+          </select>
+        </div>
+        <div class="field"><label>报名开始</label><input id="f_signupStart" type="datetime-local" /></div>
+        <div class="field"><label>报名截止</label><input id="f_signupEnd" type="datetime-local" /></div>
+        <div class="field"><label>发令时间</label><input id="f_gunTime" type="datetime-local" /></div>
+        <div class="field" style="grid-column:1/-1"><label>关门时间</label><input id="f_cutOffTime" /></div>
+        <div class="field" style="grid-column:1/-1"><label>报名规则</label><textarea id="f_signupRule"></textarea></div>
+        <div class="field" style="grid-column:1/-1"><label>领物信息</label><textarea id="f_pickupInfo"></textarea></div>
+        <div class="field" style="grid-column:1/-1"><label>赛道简介</label><textarea id="f_routeDesc"></textarea></div>
+      </div>
+
+      <div class="form-grid" data-form="runner" style="display:none">
+        <div class="field"><label>姓名</label><input id="f_name" /></div>
+        <div class="field">
+          <label>性别</label>
+          <select id="f_gender"><option value="1">男</option><option value="2">女</option></select>
+        </div>
+        <div class="field"><label>身份证</label><input id="f_idCard" maxlength="18" /></div>
+        <div class="field"><label>手机号</label><input id="f_phone" maxlength="11" /></div>
+        <div class="field"><label>出生日期</label><input id="f_birthDate" type="date" /></div>
+        <div class="field" style="grid-column:1/-1"><label>紧急联系人</label><input id="f_emergencyContact" /></div>
+      </div>
+
+      <div class="form-grid" data-form="register" style="display:none">
+        <div class="field"><label>赛事</label><select id="f_regEventId"></select></div>
+        <div class="field"><label>选手 ID</label><input id="f_regRunnerId" type="number" placeholder="runnerId" /></div>
+      </div>
+
+      <div class="form-grid" data-form="result" style="display:none">
+        <div class="field"><label>报名 ID</label><input id="f_registrationId" type="number" /></div>
+        <div class="field"><label>枪声成绩(秒)</label><input id="f_chipTime" type="number" /></div>
+        <div class="field"><label>净成绩(秒)</label><input id="f_netTime" type="number" /></div>
+        <div class="field">
+          <label>完赛状态</label>
+          <select id="f_finishStatus">
+            <option value="1">完赛</option>
+            <option value="2">未完赛</option>
+            <option value="3">其它</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1"><label>完赛时间</label><input id="f_finishTime" type="datetime-local" /></div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="modalCancel">取消</button>
+        <button type="button" class="btn btn-ghost" id="modalClose">关闭</button>
+        <button type="button" class="btn btn-signal" id="modalSave" data-form="event">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/js/api.js"></script>
+  <script src="/assets/js/admin-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1092 @@
+马拉松赛事管理系统
+
+
+  -- 1. 赛事表 marathon_event
+
+  CREATE TABLE marathon_event (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '赛事ID',
+      event_name VARCHAR(100) NOT NULL COMMENT '赛事名称',
+      event_type TINYINT NOT NULL COMMENT '赛事类型:1全程马拉松,2半程马拉松,3迷你跑',
+      event_date DATE NOT NULL COMMENT '比赛日期',
+      start_location VARCHAR(100) NOT NULL COMMENT '起点地点',
+      distance_km DECIMAL(5,1) NOT NULL COMMENT '距离(公里)',
+      quota INT NOT NULL COMMENT '总名额',
+      registered_count INT DEFAULT 0 COMMENT '已报名人数',
+      entry_fee DECIMAL(8,2) NOT NULL COMMENT '报名费',
+      status TINYINT NOT NULL COMMENT '状态:0报名中,1报名截止,2赛事已结束',
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事表';
+
+
+  -- 2. 选手档案表 runner
+
+  CREATE TABLE runner (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '选手ID',
+      name VARCHAR(50) NOT NULL COMMENT '姓名',
+      gender TINYINT NOT NULL COMMENT '性别:1男,2女',
+      id_card VARCHAR(18) NOT NULL COMMENT '身份证号',
+      phone VARCHAR(20) NOT NULL COMMENT '手机号',
+      birth_date DATE NOT NULL COMMENT '出生日期',
+      emergency_contact VARCHAR(100) NOT NULL COMMENT '紧急联系人及电话',
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+      UNIQUE uk_idcard (id_card)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='选手档案表';
+
+
+  -- 3. 报名表 registration
+
+  CREATE TABLE registration (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '报名记录ID',
+      event_id BIGINT NOT NULL COMMENT '赛事ID',
+      runner_id BIGINT NOT NULL COMMENT '选手ID',
+      bib_number VARCHAR(10) DEFAULT NULL COMMENT '号码布编号',
+      register_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '报名时间',
+      pay_status TINYINT NOT NULL DEFAULT 0 COMMENT '支付状态:0未支付,1已支付',
+      status TINYINT NOT NULL DEFAULT 1 COMMENT '报名状态:1已报名,2已取消,3退赛',
+      -- 联合唯一索引：同一个选手不能重复报同一场赛事
+
+      UNIQUE uk_event_runner (event_id, runner_id),
+
+      FOREIGN KEY (event_id) REFERENCES marathon_event(id),
+
+      FOREIGN KEY (runner_id) REFERENCES runner(id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报名表';
+
+
+  -- 4. 成绩表 result
+
+  CREATE TABLE result (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '成绩ID',
+      registration_id BIGINT NOT NULL COMMENT '报名记录ID',
+      chip_time INT NOT NULL COMMENT '枪声成绩(单位：秒)',
+      net_time INT NOT NULL COMMENT '净成绩(单位：秒)',
+      finish_status TINYINT NOT NULL COMMENT '完赛状态:1完赛,2未完赛,3退赛',
+      finish_time DATETIME DEFAULT NULL COMMENT '冲线完赛时间',
+
+      UNIQUE uk_registration (registration_id),
+
+===PAGE=== 
+
+      FOREIGN KEY (registration_id) REFERENCES registration(id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='比赛成绩表';
+
+
+  -- 5. 管理员表 admin（登录模块使用）
+
+  CREATE TABLE admin (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '管理员id',
+      username VARCHAR(50) NOT NULL COMMENT '账号',
+      password VARCHAR(100) NOT NULL COMMENT '密码',
+      admin_name VARCHAR(50) NOT NULL COMMENT '管理员名称',
+
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+      UNIQUE uk_username (username)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
+
+
+API 接口文档
+
+ 基础返回值
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {}
+
+  }
+
+
+ 分页返回值
+
+
+  {
+    "total": 总记录数,
+    "pages": 总页数,
+    "pageNum": 当前页码,
+    "pageSize": 每页条数,
+
+    "list": []
+
+  }
+
+模块 1：赛事管理 EventController
+
+基础路径：/api/event
+
+1.新增赛事
+
+请求方式：POST
+接口描述：新增马拉松赛事信息
+请求地址示例：http://localhost:8080/api/event/add
+请求体 Body 示例：
+
+===PAGE=== 
+
+  {
+    "eventName": "2026西安国际马拉松",
+
+    "eventType": 1,
+
+    "eventDate": "2026-11-15",
+    "startLocation": "西安大明宫国家遗址公园",
+
+    "distanceKm": 42.195,
+
+    "quota": 15000,
+
+    "entryFee": 200.00,
+
+    "status": 0
+
+  }
+
+
+返回值示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "id": 1
+
+    }
+
+  }
+
+
+2. 修改赛事信息
+
+请求方式：PUT
+接口描述：修改已有赛事信息
+请求地址示例：http://localhost:8080/api/event/update
+请求体 Body 示例：
+
+
+  {
+
+    "id": 1,
+    "eventName": "2026西安国际马拉松",
+
+    "eventType": 1,
+
+    "eventDate": "2026-11-15",
+    "startLocation": "西安大明宫国家遗址公园",
+
+    "distanceKm": 42.195,
+
+    "quota": 16000,
+
+    "entryFee": 200.00,
+
+    "status": 0
+
+  }
+
+
+返回 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": true
+
+  }
+
+
+3. 分页多条件查询赛事列表
+
+===PAGE=== 
+
+请求方式：GET
+接口描述：分页查询赛事，支持赛事名称、类型、状态、时间范围筛选
+请求地址示例：
+
+http://localhost:8080/api/event/list?pageNum=1&pageSize=10&eventName=西安
+&eventType=1&status=0&startDate=2026-10-01&endDate=2026-12-31
+
+返回 data 示例：
+
+
+  {
+
+    "total": 3,
+
+    "pages": 1,
+
+    "pageNum": 1,
+
+    "pageSize": 10,
+
+    "list": [
+
+      {
+
+        "id": 1,
+        "eventName": "2026西安国际马拉松",
+
+        "eventType": 1,
+
+        "eventDate": "2026-11-15",
+        "startLocation": "西安大明宫国家遗址公园",
+
+        "distanceKm": 42.195,
+
+        "quota": 15000,
+
+        "registeredCount": 3200,
+
+        "remainQuota": 11800,
+
+        "entryFee": 200.00,
+
+        "status": 0,
+
+        "createTime": "2026-09-01 10:20:00"
+
+      }
+
+    ]
+
+  }
+
+4. 查询赛事详情
+
+请求方式：GET
+接口描述：根据赛事 id 查询单场赛事完整信息，附带剩余名额
+请求地址示例：http://localhost:8080/api/event/detail/1
+
+
+
+  {
+
+    "id": 1,
+    "eventName": "2026西安国际马拉松",
+
+    "eventType": 1,
+
+    "eventDate": "2026-11-15",
+    "startLocation": "西安大明宫国家遗址公园",
+
+    "distanceKm": 42.195,
+
+    "quota": 15000,
+
+    "registeredCount": 3200,
+
+    "remainQuota": 11800,
+
+    "entryFee": 200.00,
+
+    "status": 0,
+
+    "createTime": "2026-09-01 10:20:00"
+
+  }
+
+5. 删除赛事
+
+===PAGE=== 
+
+请求方式：DELETE
+接口描述：删除赛事，仅无报名记录、未开始赛事允许删除
+请求地址示例：http://localhost:8080/api/event/delete/2
+
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": true
+
+  }
+
+
+模块 2：选手管理 RunnerController
+
+基础路径：/api/runner
+
+1. 新增选手档案
+
+请求方式：POST
+
+接口描述：录入选手基础档案信息
+
+请求地址示例：http://localhost:8080/api/runner/add
+
+请求体 Body 示例：
+
+
+  {
+    "name": "张三",
+
+    "gender": 1,
+
+    "idCard": "610104199503101234",
+
+    "phone": "13800138000",
+
+    "birthDate": "1995-03-10",
+    "emergencyContact": "李四,13900139000"
+
+  }
+
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "id": 1
+
+    }
+
+  }
+
+2. 修改选手档案
+
+请求方式：PUT
+
+接口描述：修改选手档案信息
+
+请求地址示例：http://localhost:8080/api/runner/update
+
+请求体 Body 示例：
+
+===PAGE=== 
+
+  {
+
+    "id": 1,
+    "name": "张三",
+
+    "gender": 1,
+
+    "idCard": "610104199503101234",
+
+    "phone": "13800138888",
+
+    "birthDate": "1995-03-10",
+    "emergencyContact": "李四,13900139000"
+
+  }
+
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": true
+
+  }
+
+3.分页查询选手列表
+
+请求方式：GET
+
+接口描述：分页查询选手，支持姓名、手机号模糊检索
+
+请求地址示例：http://localhost:8080/api/runner/list?pageNum=1&pageSize=10&name=张
+
+&phone=138
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "total": 25,
+
+      "pages": 3,
+
+      "pageNum": 1,
+
+      "pageSize": 10,
+
+      "list": [
+
+        {
+
+          "id": 1,
+          "name": "张三",
+
+          "gender": 1,
+
+          "idCard": "610104199503101234",
+
+          "phone": "13800138888",
+
+          "birthDate": "1995-03-10",
+          "emergencyContact": "李四,13900139000"
+
+        }
+
+      ]
+
+    }
+
+  }
+
+4.查询选手详情
+
+请求方式：GET
+
+接口描述：根据选手 id 查询选手完整档案
+
+===PAGE=== 
+
+请求地址示例：http://localhost:8080/api/runner/detail/1
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "id": 1,
+      "name": "张三",
+
+      "gender": 1,
+
+      "idCard": "610104199503101234",
+
+      "phone": "13800138888",
+
+      "birthDate": "1995-03-10",
+      "emergencyContact": "李四,13900139000"
+
+    }
+
+  }
+
+5.删除选手
+
+请求方式：DELETE
+
+接口描述：删除选手，有报名记录的选手不能删除
+
+请求地址示例：http://localhost:8080/api/runner/delete/2
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": true
+
+  }
+
+
+模块 3：赛事报名 RegistrationController
+
+基础路径：/api/register
+
+1. 提交赛事报名
+
+请求方式：POST
+
+接口描述：选手报名赛事，校验名额，防止重复报名
+
+请求地址示例：http://localhost:8080/api/register/submit
+
+请求体 Body 示例：
+
+
+  {
+
+    "eventId": 1,
+
+    "runnerId": 1
+
+  }
+
+
+完整返回 JSON 示例：
+
+===PAGE=== 
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "registrationId": 1001
+
+    }
+
+  }
+
+2. 取消报名
+
+请求方式：POST
+
+接口描述：选手取消报名，扣减赛事报名人数
+
+请求地址示例：http://localhost:8080/api/register/cancel
+
+请求体 Body 示例：
+
+
+  {
+
+    "registrationId": 1001
+
+  }
+
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": true
+
+  }
+
+3. 分配号码布
+
+请求方式：PUT
+
+接口描述：给报名记录分配参赛号码布
+
+请求地址示例：http://localhost:8080/api/register/bib
+
+请求体 Body 示例：
+
+
+  {
+
+    "registrationId": 1001,
+
+    "bibNumber": "A0001"
+
+  }
+
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": "A0001"
+
+  }
+
+4. 分页查询报名名单
+
+===PAGE=== 
+
+请求方式：GET
+
+接口描述：分页查询报名记录，可按赛事 ID、选手姓名筛选，关联选手和赛事信息
+
+请求地址示例：http://localhost:8080/api/register/list?
+
+pageNum=1&pageSize=10&eventId=1&name=张
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "total": 3200,
+
+      "pages": 320,
+
+      "pageNum": 1,
+
+      "pageSize": 10,
+
+      "list": [
+
+        {
+
+          "id": 1001,
+
+          "eventId":1,
+
+          "runnerId":1,
+
+          "bibNumber":"A0001",
+
+          "registerTime":"2026-09-10 08:30:00",
+
+          "payStatus":1,
+
+          "status":1,
+
+          "runner":{
+
+            "id":1,
+           "name":"张三",
+
+            "gender":1,
+
+            "phone":"13800138888"
+
+          },
+
+          "event":{
+          "eventName":"2026西安国际马拉松"
+
+          }
+
+        }
+
+      ]
+
+    }
+
+  }
+
+5. 查询单条报名详情
+
+请求方式：GET
+
+接口描述：查询单条报名记录，附带选手信息与赛事简要信息
+
+请求地址示例：http://localhost:8080/api/register/detail/1001
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "id": 1001,
+
+      "eventId":1,
+
+      "runnerId":1,
+
+      "bibNumber":"A0001",
+
+===PAGE=== 
+
+      "registerTime":"2026-09-10 08:30:00",
+
+      "payStatus":1,
+
+      "status":1,
+
+      "runner":{
+
+        "id":1,
+       "name":"张三",
+
+        "gender":1,
+
+        "phone":"13800138888"
+
+      },
+
+      "event":{
+
+        "id":1,
+       "eventName":"2026西安国际马拉松",
+
+        "eventDate":"2026-11-15"
+
+      }
+
+    }
+
+  }
+
+
+模块 4：比赛成绩 ResultController
+
+基础路径：/api/result
+
+1. 录入选手完赛成绩
+
+请求方式：POST
+
+接口描述：录入选手计时成绩，一条报名记录只能录入一次成绩
+
+请求地址示例：http://localhost:8080/api/result/input
+
+请求体 Body 示例：
+
+
+  {
+
+    "registrationId":1001,
+
+    "chipTime":12800,
+
+    "netTime":12560,
+
+    "finishStatus":1,
+
+    "finishTime":"2026-11-15 10:29:20"
+
+  }
+
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "id": 2001
+
+    }
+
+  }
+
+2.修改成绩信息
+
+请求方式：PUT
+
+接口描述：修改已经录入的比赛成绩
+
+===PAGE=== 
+
+请求地址示例：http://localhost:8080/api/result/update
+
+请求体 Body 示例：
+
+
+  {
+
+    "id":2001,
+
+    "registrationId":1001,
+
+    "chipTime":12800,
+
+    "netTime":12550,
+
+    "finishStatus":1,
+
+    "finishTime":"2026-11-15 10:29:10"
+
+  }
+
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": true
+
+  }
+
+3.赛事总排名
+
+请求方式：GET
+
+接口描述：获取该赛事全部完赛选手总排名，按净成绩升序
+
+请求地址示例：http://localhost:8080/api/result/eventRanking/1?pageNum=1&pageSize=10
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "total": 2100,
+
+      "pages": 210,
+
+      "pageNum": 1,
+
+      "pageSize": 10,
+
+      "list": [
+
+        {
+
+          "rank":1,
+         "name":"张三",
+
+          "bibNumber":"A0001",
+
+          "gender":1,
+
+          "netTime":12550,
+
+          "netTimeStr":"03:29:10"
+
+        }
+
+      ]
+
+    }
+
+  }
+
+4. 男女分组排名
+
+请求方式：GET 接
+
+口描述：同一赛事，男子组、女子组分别独立排名
+
+===PAGE=== 
+
+请求地址示例：http://localhost:8080/api/result/genderRanking/1?pageNum=1&pageSize=10
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "maleList": [
+
+        {
+
+          "rank":1,
+         "name":"张三",
+
+          "bibNumber":"A0001",
+
+          "netTime":12550,
+
+          "netTimeStr":"03:29:10"
+
+        }
+
+      ],
+
+      "femaleList": [
+
+        {
+
+          "rank":1,
+         "name":"小红",
+
+          "bibNumber":"A0010",
+
+          "netTime":13600,
+
+          "netTimeStr":"03:46:40"
+
+        }
+
+      ]
+
+    }
+
+  }
+
+5. 年龄分组排名
+
+请求方式：GET
+
+接口描述：自动计算选手年龄，按年龄段分组排名：≤29 /30-39 /40-49 /≥50
+
+请求地址示例：http://localhost:8080/api/result/ageRanking/1?pageNum=1&pageSize=10
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "group_29below": [
+
+        {
+
+          "rank":1,
+         "name":"张三",
+
+          "bibNumber":"A0001",
+
+          "age":31,
+
+          "netTime":12550,
+
+          "netTimeStr":"03:29:10"
+
+        }
+
+      ],
+
+      "group_30_39": [],
+
+      "group_40_49": [],
+
+      "group_50up": []
+
+    }
+
+===PAGE=== 
+
+  }
+
+6.分页查询成绩记录
+
+请求方式：GET
+
+接口描述：分页查询成绩记录，可按赛事 ID 筛选
+
+请求地址示例：http://localhost:8080/api/result/list?pageNum=1&pageSize=10&eventId=1
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "total": 2100,
+
+      "pages": 210,
+
+      "pageNum": 1,
+
+      "pageSize": 10,
+
+      "list": [
+
+        {
+
+          "id":2001,
+
+          "registrationId":1001,
+
+          "chipTime":12800,
+
+          "netTime":12550,
+
+          "finishStatus":1,
+
+          "finishTime":"2026-11-15 10:29:10",
+         "runnerName":"张三",
+
+          "bibNumber":"A0001"
+
+        }
+
+      ]
+
+    }
+
+  }
+
+模块 5：统计看板 StatisticsController
+
+基础路径：/api/statistics
+
+1. 单场赛事统计总览
+
+请求方式：GET
+
+接口描述：统计赛事报名人数、男女占比、完赛率、平均完赛时间等聚合数据
+
+请求地址示例：http://localhost:8080/api/statistics/eventOverview/1
+
+完整返回 JSON 示例：
+
+
+  {
+
+    "code": 200,
+    "msg": "操作成功",
+
+    "data": {
+
+      "eventId":1,
+     "eventName":"2026西安国际马拉松",
+
+      "totalRegister":3200,
+
+      "maleCount":2100,
+
+===PAGE=== 
+
+    "femaleCount":1100,
+
+    "finishCount":2100,
+
+    "unFinishCount":800,
+
+    "retireCount":300,
+
+    "finishRate":65.63,
+
+    "avgNetTime":14500,
+
+    "avgNetTimeStr":"04:01:40"
+
+  }
+
+}

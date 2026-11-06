@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>马拉松赛事管理台 · Marathon Console</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Archivo:wght@500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* ========== 设计令牌 ========== */
+:root{
+  --bg:#0E1521; --bg2:#101A28; --panel:#151F2E; --panel2:#1B2638;
+  --border:#243046; --border2:#2C3A55;
+  --text:#EEF1F6; --text2:#9AA6BC; --text3:#6E7A90;
+  --orange:#FF7A3C; --orange2:#FF9357; --orangeDim:rgba(255,122,60,.14);
+  --green:#4BC38A; --red:#F2665B; --amber:#F5B95C; --blue:#6CA7F0;
+  --mono:'Archivo',Arial,sans-serif; --sans:'Noto Sans SC',system-ui,sans-serif;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-width:1100px;overflow-x:auto}
+/* ========== 布局 ========== */
+#app{display:flex;min-height:100vh;background:
+  radial-gradient(1200px 500px at 85% -10%, rgba(255,122,60,.10), transparent 60%),
+  radial-gradient(900px 500px at -10% 110%, rgba(108,167,240,.08), transparent 60%),
+  var(--bg)}
+/* ========== 侧边栏 ========== */
+.sidebar{width:236px;flex:none;padding:22px 14px;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:6px;background:rgba(16,22,32,.55)}
+.logo{display:flex;align-items:center;gap:11px;padding:6px 10px 20px}
+.logo-mark{width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--orange),#FF5A1F);box-shadow:0 6px 18px rgba(255,90,31,.35)}
+.logo-name{font-family:var(--mono);font-weight:800;font-size:17px;letter-spacing:.5px}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:2.5px;font-weight:700}
+/* 侧栏导航：button 重置，保证键盘可达 */
+.nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;cursor:pointer;
+  color:var(--text2);font-weight:500;transition:.18s;border:1px solid transparent;
+  width:100%;background:transparent;font-family:var(--sans);font-size:14px;text-align:left}
+.nav-item svg{flex:none;opacity:.85}
+.nav-item:hover{background:var(--panel);color:var(--text)}
+.nav-item.active{background:var(--orangeDim);color:var(--orange);border-color:rgba(255,122,60,.25)}
+.nav-item .tag{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--text3);background:var(--panel2);padding:1px 7px;border-radius:8px}
+.side-foot{margin-top:auto;padding:12px 12px 4px;font-size:11px;color:var(--text3);border-top:1px solid var(--border)}
+.side-foot .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;box-shadow:0 0 8px var(--green)}
+/* ========== 主区 ========== */
+.main{flex:1;min-width:0;padding:22px 28px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.page-title{font-family:var(--mono);font-size:22px;font-weight:800;letter-spacing:.4px}
+.page-title small{display:block;font-family:var(--sans);font-size:12px;color:var(--text3);font-weight:400;letter-spacing:0;margin-top:2px}
+.topbar .spacer{flex:1}
+/* 赛事选择器 */
+.event-picker{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:8px 13px}
+.event-picker label{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px}
+.event-picker select{background:transparent;border:none;color:var(--text);font-family:var(--sans);font-size:13px;font-weight:500;outline:none;cursor:pointer;max-width:200px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:10px;cursor:pointer;
+  font-family:var(--sans);font-size:13px;font-weight:600;border:1px solid var(--border2);color:var(--text);background:var(--panel);transition:.18s;white-space:nowrap}
+.btn:hover{border-color:var(--orange);color:var(--orange)}
+.btn.primary{background:linear-gradient(135deg,var(--orange),#FF5A1F);border:none;color:#fff;box-shadow:0 6px 18px rgba(255,90,31,.3)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--red);border-color:rgba(242,102,91,.4)}
+.btn.danger:hover{background:rgba(242,102,91,.12);border-color:var(--red)}
+.btn.ghost{border-color:var(--border)}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.55;cursor:not-allowed;filter:none!important;pointer-events:none}
+/* ========== 卡片与统计 ========== */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.card h3{font-size:13px;color:var(--text2);font-weight:600;margin-bottom:14px;letter-spacing:.3px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:"";position:absolute;top:0;left:0;height:3px;width:60px;border-radius:3px;background:var(--orange);opacity:.9}
+.stat .lab{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1.5px}
+.stat .num{font-family:var(--mono);font-size:30px;font-weight:800;margin:6px 0 2px;letter-spacing:.5px}
+.stat .sub{font-size:12px;color:var(--text2)}
+.stat .num small{font-size:14px;color:var(--text3);font-weight:600}
+/* 排名成绩高亮 */
+.gold{color:var(--orange2)}
+/* ========== 赛道进度带（签名元素） ========== */
+.finish-band{margin-bottom:22px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);
+  background:linear-gradient(100deg,var(--panel2),var(--panel));position:relative}
+.finish-band .inner{padding:18px 22px}
+.finish-band .cap{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.finish-band .cap .t{font-family:var(--mono);font-size:16px;font-weight:700}
+.finish-band .cap .s{font-size:12px;color:var(--text3)}
+.finish-meta{display:flex;gap:34px;flex-wrap:wrap}
+.finish-meta .cell .k{font-size:11px;color:var(--text3);letter-spacing:1px}
+.finish-meta .cell .v{font-family:var(--mono);font-size:24px;font-weight:800}
+.track{position:relative;height:26px;background:#0C1119;border-radius:13px;overflow:hidden;margin-top:6px}
+.track .fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--orange),var(--orange2));border-radius:13px;transition:width .5s}
+.track .ticks{position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;color:var(--text3);font-size:11px;font-family:var(--mono)}
+/* ========== 表格（表头吸顶） ========== */
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);max-height:560px}
+table{width:100%;border-collapse:collapse;min-width:640px}
+thead th{text-align:left;font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;padding:12px 16px;border-bottom:1px solid var(--border2);white-space:nowrap;
+  position:sticky;top:0;z-index:2;background:var(--panel);box-shadow:0 1px 0 var(--border2)}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.empty-row td{padding:36px 16px!important;text-align:center;color:var(--text3)}
+.empty-row .empty-tip{margin-bottom:12px;font-size:13px}
+.empty-row .empty-actions{display:flex;justify-content:center;gap:8px}
+td.mono, .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.ok{background:rgba(75,195,138,.14);color:var(--green)}
+.pill.warn{background:rgba(245,185,92,.14);color:var(--amber)}
+.pill.danger{background:rgba(242,102,91,.14);color:var(--red)}
+.pill.mute{background:var(--panel2);color:var(--text3)}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;font-family:var(--mono);font-weight:800;font-size:13px}
+.rank-badge.r1{background:linear-gradient(135deg,var(--orange),#FF5A1F);color:#fff;box-shadow:0 4px 12px rgba(255,90,31,.4)}
+.rank-badge.r2{background:var(--panel2);color:var(--orange2);border:1px solid var(--border2)}
+.rank-badge.other{background:var(--panel2);color:var(--text3)}
+.row-actions{display:flex;gap:6px}
+/* ========== 筛选条 ========== */
+.filters{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.field{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:7px 12px}
+.field input{background:transparent;border:none;color:var(--text);outline:none;font-size:13px;font-family:var(--sans);width:130px}
+.field input::placeholder{color:var(--text3)}
+.field select{background:transparent;border:none;color:var(--text);outline:none;font-size:13px;font-family:var(--sans);cursor:pointer}
+/* ========== 弹窗 ========== */
+.modal-mask{position:fixed;inset:0;background:rgba(8,12,18,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-mask.open{display:flex}
+.modal{width:440px;max-width:94vw;background:var(--panel2);border:1px solid var(--border2);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal h3{font-family:var(--mono);font-size:17px;font-weight:800;margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.form-grid .full{grid-column:1/-1}
+.f-group label{display:block;font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.8px;margin-bottom:5px}
+.f-group label .req{color:var(--red);margin-left:2px}
+.f-group input,.f-group select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 11px;font-size:13px;outline:none;font-family:var(--sans)}
+.f-group input:focus,.f-group select:focus{border-color:var(--orange)}
+.f-group input.field-error,.f-group select.field-error{border-color:var(--red)!important;box-shadow:0 0 0 2px rgba(242,102,91,.18)}
+.field-err-msg{display:block;margin-top:5px;font-size:11px;color:var(--red);line-height:1.3}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+/* 焦点环：键盘可达时橙色描边 */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.btn:focus-visible,.nav-item:focus-visible,.tab:focus-visible,.field input:focus-visible,.field select:focus-visible,
+.f-group input:focus-visible,.f-group select:focus-visible,.event-picker select:focus-visible{
+  outline:2px solid var(--orange);outline-offset:2px}
+/* 加载 spinner */
+.loading-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 20px;color:var(--text3);font-size:13px}
+.spinner{width:28px;height:28px;border:3px solid var(--border2);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ========== Toast ========== */
+.toast-wrap{position:fixed;top:22px;right:22px;z-index:99;display:flex;flex-direction:column;gap:10px}
+.toast{padding:12px 18px;border-radius:11px;background:var(--panel2);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.4);display:flex;gap:9px;align-items:center;animation:slidein .25s}
+.toast.ok{border-color:rgba(75,195,138,.5)}
+.toast.ok::before{content:"✓";color:var(--green);font-weight:800}
+.toast.err{border-color:rgba(242,102,91,.5)}
+.toast.err::before{content:"!";color:var(--red);font-weight:800}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+/* ========== Tabs ========== */
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;align-items:center}
+.tab{padding:8px 14px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text2);font-weight:500;transition:.15s;
+  background:transparent;border:1px solid transparent;font-family:var(--sans)}
+.tab.active{background:var(--orangeDim);color:var(--orange);font-weight:700}
+/* ========== 榜单 ========== */
+.podium{display:flex;align-items:flex-end;gap:12px;padding:8px 0 20px}
+.podium .spot{flex:1;text-align:center}
+.podium .bar{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:10px 10px 4px 4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:800;font-size:15px;color:var(--orange2)}
+.podium .spot:nth-child(1) .bar{height:88px;border-color:rgba(255,122,60,.4);color:var(--orange);background:linear-gradient(180deg,rgba(255,122,60,.2),var(--panel))}
+.podium .spot:nth-child(2) .bar{height:64px}
+.podium .spot:nth-child(3) .bar{height:46px}
+.podium .nm{font-weight:600;font-size:12.5px}
+.podium .tm{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.placeholder{color:var(--text3);text-align:center;padding:30px;font-size:13px}
+/* ========== 空态 ========== */
+.empty{padding:40px;text-align:center;color:var(--text3);font-size:13px}
+/* ========== 登录遮罩 ========== */
+.login-mask{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(900px 500px at 70% 10%,rgba(255,122,60,.16),transparent 55%),rgba(8,12,18,.88);backdrop-filter:blur(8px)}
+.login-mask.open{display:flex}
+.login-box{width:380px;max-width:92vw;background:var(--panel2);border:1px solid var(--border2);border-radius:16px;padding:28px 26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.login-box .brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.login-box .brand .logo-mark{width:40px;height:40px}
+.login-box h2{font-family:var(--mono);font-size:18px;font-weight:800;letter-spacing:.4px}
+.login-box .hint{font-size:12px;color:var(--text3);margin-top:2px}
+.login-box .f-group{margin-bottom:14px}
+.login-box .err{min-height:18px;font-size:12px;color:var(--red);margin-bottom:8px}
+.login-box .btn.primary{width:100%;justify-content:center;padding:11px 15px}
+#app.hidden{display:none}
+/* ========== 赛事封面缩略图 / 上传预览 ========== */
+.cover-thumb{width:52px;height:36px;object-fit:cover;border-radius:8px;border:1px solid var(--border);background:var(--panel2);display:block}
+.cover-upload{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.cover-preview{width:120px;height:80px;border-radius:10px;border:1px dashed var(--border2);object-fit:cover;background:var(--bg2)}
+.cover-preview.empty{display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;border-style:dashed}
+.cover-actions{display:flex;flex-direction:column;gap:8px}
+.cover-actions input[type=file]{font-size:12px;color:var(--text2);max-width:220px}
+.cover-hint{font-size:11px;color:var(--text3)}
+</style>
+</head>
+<body>
+<!-- ===== 登录框（无 token 时显示） ===== -->
+<div class="login-mask" id="loginMask">
+  <div class="login-box">
+    <div class="brand">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M4.6 15h5l1.4-3 1.6 3 1.6-3h2"/><path d="M8 7v3M16 7v3"/></svg>
+      </div>
+      <div>
+        <h2>MARATHON</h2>
+        <div class="hint">管理台登录 · 请输入管理员账号</div>
+      </div>
+    </div>
+    <div class="f-group">
+      <label>用户名</label>
+      <input id="loginUser" autocomplete="username" placeholder="admin" value="admin">
+    </div>
+    <div class="f-group">
+      <label>密码</label>
+      <input id="loginPass" type="password" autocomplete="current-password" placeholder="请输入密码" value="123456">
+    </div>
+    <div class="err" id="loginErr"></div>
+    <button class="btn primary" id="btnLogin">登 录</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M4.6 15h5l1.4-3 1.6 3 1.6-3h2"/><path d="M8 7v3M16 7v3"/></svg>
+      </div>
+      <div>
+        <div class="logo-name">MARATHON</div>
+        <div class="logo-sub">CONSOLE</div>
+      </div>
+    </div>
+
+    <button type="button" class="nav-item active" data-nav="overview" aria-label="总览">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg>
+      总览
+    </button>
+    <button type="button" class="nav-item" data-nav="events" aria-label="赛事管理">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 21V7l5-3 5 3 4-2v14l-4 2-5-3-5 3z"/><path d="M5 7h9M10 4v15"/></svg>
+      赛事管理
+    </button>
+    <button type="button" class="nav-item" data-nav="runners" aria-label="选手管理">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7.5" r="3.2"/><path d="M3 21v-3.5a6 6 0 0 1 12 0V21"/><circle cx="18.5" cy="9" r="2.2"/><path d="M15.5 21v-4a5.6 5.6 0 0 0-.7-2.7"/></svg>
+      选手管理
+    </button>
+    <button type="button" class="nav-item" data-nav="registers" aria-label="报名管理">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+      报名管理
+    </button>
+    <button type="button" class="nav-item" data-nav="results" aria-label="成绩与排名">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="7"/><path d="M12 13V7.5l4-3M7 3h5"/><path d="M12 11l3 2.5"/></svg>
+      成绩与排名
+    </button>
+    <button type="button" class="nav-item" data-nav="stats" aria-label="统计看板">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h5v5"/></svg>
+      统计看板
+    </button>
+
+    <div class="side-foot">
+      <span class="dot"></span>服务运行中 · localhost:8081
+      <div style="margin-top:10px">
+        <button class="btn sm ghost" id="btnLogout" style="width:100%;justify-content:center">退出登录</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== 主区 ===== -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="pageTitle">总览</div>
+        <small id="pageSub">马拉松赛事管理系统</small>
+      </div>
+      <div class="spacer"></div>
+      <div class="event-picker">
+        <label>当前赛事</label>
+        <select id="eventSelect"></select>
+      </div>
+      <button class="btn ghost" id="btnRefresh">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+        刷新
+      </button>
+    </div>
+
+    <div id="view"></div>
+  </main>
+</div>
+
+<div class="modal-mask" id="modalMask"><div class="modal" id="modalBox"></div></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ============================================================
+   API 封装（自动携带 JWT；401 时清 token 并回到登录框）
+============================================================ */
+const API = 'http://localhost:8081/api';
+const TOKEN_KEY = 'marathon_token';
+
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+function showLogin(msg) {
+  clearToken();
+  $('#app').classList.add('hidden');
+  $('#loginMask').classList.add('open');
+  if (msg) $('#loginErr').textContent = msg;
+}
+
+function showApp() {
+  $('#loginMask').classList.remove('open');
+  $('#loginErr').textContent = '';
+  $('#app').classList.remove('hidden');
+}
+
+async function api(path, method = 'GET', body, { auth = true } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  // 除登录接口外，自动在 Header 带上 Authorization: Bearer <token>
+  if (auth) {
+    const token = getToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  }
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(API + path, opts);
+
+  // token 缺失 / 失效：后端返回 HTTP 401
+  if (res.status === 401) {
+    showLogin('登录已过期，请重新登录');
+    throw new Error('未登录或登录已过期');
+  }
+
+  let j;
+  try { j = await res.json(); } catch (e) { throw new Error('HTTP ' + res.status); }
+  if (!res.ok && j.code == null) throw new Error('HTTP ' + res.status);
+  if (j.code !== 200) throw new Error(j.msg || '请求失败');
+  return j.data;
+}
+const GET  = p => api(p);
+const POST = (p, b, o) => api(p, 'POST', b, o);
+const PUT  = (p, b) => api(p, 'PUT', b);
+const DEL  = p => api(p, 'DELETE');
+
+/**
+ * 下载 Excel（带 JWT；用 blob 触发浏览器保存）
+ * @param path 如 '/register/export?eventId=1'
+ * @param fallbackName 默认文件名
+ */
+/* 封面占位图（无封面时列表缩略图） */
+const COVER_PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="104" height="72" viewBox="0 0 104 72">' +
+  '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1B2638"/><stop offset="1" stop-color="#151F2E"/></linearGradient></defs>' +
+  '<rect width="104" height="72" rx="8" fill="url(#g)"/>' +
+  '<path d="M28 48l12-16 10 12 8-8 18 20H28z" fill="#FF7A3C" opacity=".55"/>' +
+  '<circle cx="38" cy="28" r="6" fill="#6CA7F0" opacity=".7"/>' +
+  '<text x="52" y="64" text-anchor="middle" fill="#6E7A90" font-size="9" font-family="sans-serif">NO COVER</text></svg>'
+);
+window.COVER_PLACEHOLDER = COVER_PLACEHOLDER;
+
+function coverSrc(url) {
+  return url ? url : COVER_PLACEHOLDER;
+}
+
+/**
+ * 上传封面图（FormData，勿手动设 Content-Type）
+ * @returns {Promise<string>} 访问 URL
+ */
+async function uploadCoverFile(file) {
+  if (!file) throw new Error('请选择图片');
+  const okType = /image\/(jpeg|jpg|png)/i.test(file.type) || /\.(jpe?g|png)$/i.test(file.name);
+  if (!okType) throw new Error('仅支持 jpg / jpeg / png');
+  if (file.size > 5 * 1024 * 1024) throw new Error('图片不能超过 5MB');
+
+  const fd = new FormData();
+  fd.append('file', file);
+  const token = getToken();
+  const res = await fetch(API + '/event/upload', {
+    method: 'POST',
+    headers: token ? { Authorization: 'Bearer ' + token } : {},
+    body: fd
+  });
+  if (res.status === 401) {
+    showLogin('登录已过期，请重新登录');
+    throw new Error('未登录或登录已过期');
+  }
+  const j = await res.json();
+  if (j.code !== 200) throw new Error(j.msg || '上传失败');
+  return j.data.url;
+}
+
+/**
+ * 绑定封面上传控件：本地预览 + 上传回填 hidden 字段
+ * @param {string} fileInputId
+ * @param {string} previewId  img 或 div
+ * @param {string} urlInputId hidden input 存 coverImage URL
+ */
+function bindCoverUpload(fileInputId, previewId, urlInputId) {
+  const input = $('#' + fileInputId);
+  const preview = $('#' + previewId);
+  const urlInput = $('#' + urlInputId);
+  if (!input) return;
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    // 本地预览
+    const localUrl = URL.createObjectURL(file);
+    if (preview.tagName === 'IMG') {
+      preview.src = localUrl;
+      preview.classList.remove('empty');
+    } else {
+      preview.innerHTML = `<img src="${localUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`;
+      preview.classList.remove('empty');
+    }
+    try {
+      const url = await uploadCoverFile(file);
+      urlInput.value = url;
+      if (preview.tagName === 'IMG') preview.src = url;
+      toast('封面上传成功');
+    } catch (e) {
+      toast(e.message, false);
+      input.value = '';
+    }
+  };
+}
+
+/** 打开赛事表单弹窗（新增 / 编辑） */
+function openEventForm(mode, ev) {
+  const isEdit = mode === 'edit' && ev;
+  const title = isEdit ? '编辑赛事' : '新增赛事';
+  const cover = isEdit && ev.coverImage ? ev.coverImage : '';
+  modal(`
+  <h3>${title}</h3>
+  <div class="form-grid">
+    <div class="f-group full"><label>赛事名称<span class="req">*</span></label><input id="ev_name" placeholder="如：2027西安国际马拉松" value="${esc(isEdit ? ev.eventName : '')}"></div>
+    <div class="f-group"><label>类型<span class="req">*</span></label><select id="ev_type"><option value="1">全程马拉松</option><option value="2">半程马拉松</option><option value="3">迷你跑</option></select></div>
+    <div class="f-group"><label>比赛日期<span class="req">*</span></label><input id="ev_date" type="date" value="${isEdit ? (ev.eventDate || '') : ''}"></div>
+    <div class="f-group full"><label>起点地点</label><input id="ev_loc" placeholder="起点地点" value="${esc(isEdit ? (ev.startLocation || '') : '')}"></div>
+    <div class="f-group"><label>距离(km)<span class="req">*</span></label><input id="ev_km" type="number" step="0.1" placeholder="42.195" value="${isEdit && ev.distanceKm != null ? ev.distanceKm : ''}"></div>
+    <div class="f-group"><label>总名额<span class="req">*</span></label><input id="ev_quota" type="number" placeholder="15000" value="${isEdit && ev.quota != null ? ev.quota : ''}"></div>
+    <div class="f-group"><label>报名费(元)</label><input id="ev_fee" type="number" step="0.01" placeholder="200" value="${isEdit && ev.entryFee != null ? ev.entryFee : ''}"></div>
+    <div class="f-group"><label>状态</label><select id="ev_status"><option value="0">报名中</option><option value="1">报名截止</option><option value="2">已结束</option></select></div>
+    <div class="f-group full">
+      <label>封面图</label>
+      <div class="cover-upload">
+        <img id="ev_cover_preview" class="cover-preview" src="${coverSrc(cover)}" alt="封面预览">
+        <div class="cover-actions">
+          <input type="file" id="ev_cover_file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+          <input type="hidden" id="ev_cover_url" value="${esc(cover)}">
+          <div class="cover-hint">支持 jpg / png，最大 5MB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn ghost" type="button" onclick="closeModal()">取消</button><button class="btn primary" type="button" id="ev_save">保存</button></div>`);
+
+  if (isEdit) {
+    $('#ev_type').value = String(ev.eventType ?? 1);
+    $('#ev_status').value = String(ev.status ?? 0);
+  }
+  bindCoverUpload('ev_cover_file', 'ev_cover_preview', 'ev_cover_url');
+
+  $('#ev_save').onclick = () => withBtnLoading($('#ev_save'), async () => {
+    try {
+      clearFieldErrors();
+      let ok = true;
+      if (!($('#ev_name').value || '').trim()) { setFieldError($('#ev_name'), '赛事名称不能为空'); ok = false; }
+      if (!$('#ev_date').value) { setFieldError($('#ev_date'), '比赛日期不能为空'); ok = false; }
+      if (!($('#ev_km').value) || +$('#ev_km').value <= 0) { setFieldError($('#ev_km'), '距离必须大于 0'); ok = false; }
+      if (!($('#ev_quota').value) || +$('#ev_quota').value < 1) { setFieldError($('#ev_quota'), '总名额至少为 1'); ok = false; }
+      if (!ok) { toast('请检查标红字段', false); return; }
+
+      const payload = {
+        eventName: $('#ev_name').value.trim(),
+        eventType: +$('#ev_type').value,
+        eventDate: $('#ev_date').value,
+        startLocation: $('#ev_loc').value,
+        distanceKm: +$('#ev_km').value,
+        quota: +$('#ev_quota').value,
+        entryFee: +$('#ev_fee').value || 0,
+        status: +$('#ev_status').value,
+        coverImage: $('#ev_cover_url').value || null
+      };
+      if (isEdit) {
+        payload.id = ev.id;
+        await PUT('/event/update', payload);
+        toast('赛事已更新');
+      } else {
+        await POST('/event/add', payload);
+        toast('赛事已创建');
+      }
+      closeModal();
+      await loadEvents();
+      renderEvents();
+    } catch (e) { toast(e.message, false); }
+  });
+}
+
+async function downloadExcel(path, fallbackName) {
+  const token = getToken();
+  const res = await fetch(API + path, {
+    method: 'GET',
+    headers: token ? { Authorization: 'Bearer ' + token } : {}
+  });
+  if (res.status === 401) {
+    showLogin('登录已过期，请重新登录');
+    throw new Error('未登录或登录已过期');
+  }
+  if (!res.ok) {
+    let msg = '导出失败 HTTP ' + res.status;
+    try {
+      const j = await res.json();
+      if (j && j.msg) msg = j.msg;
+    } catch (e) { /* 非 JSON 忽略 */ }
+    throw new Error(msg);
+  }
+  const blob = await res.blob();
+  let fileName = fallbackName || 'export.xlsx';
+  const cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition') || '';
+  const m = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(cd);
+  if (m) {
+    try { fileName = decodeURIComponent((m[1] || m[2] || '').trim()); } catch (e) { /* keep fallback */ }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   状态
+============================================================ */
+const state = { currentEvent: null, events: [] };
+
+/* ============================================================
+   工具
+============================================================ */
+function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
+function $(s) { return document.querySelector(s); }
+function fmtTime(sec) { if (!sec) return '--:--:--'; const h = String(Math.floor(sec/3600)).padStart(2,'0'); const m = String(Math.floor(sec%3600/60)).padStart(2,'0'); const s = String(sec%60).padStart(2,'0'); return h+':'+m+':'+s; }
+function esc(v) { return String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const typeName = t => ({1:'全程',2:'半程',3:'迷你'}[t] ?? '未知');
+const statusPill = s => s === 0 ? '<span class="pill ok">报名中</span>' : s === 1 ? '<span class="pill warn">报名截止</span>' : '<span class="pill mute">已结束</span>';
+function toast(msg, ok = true) {
+  const w = $('#toastWrap'); const t = el(`<div class="toast ${ok ? 'ok' : 'err'}">${esc(msg)}</div>`);
+  w.appendChild(t); setTimeout(() => { t.style.opacity = 0; setTimeout(() => t.remove(), 300); }, 2600);
+}
+
+/* ---------- UX 补丁：加载 / 空态 / 按钮防重 / 表单校验 / 弹窗键盘 ---------- */
+const RE_PHONE = /^1[3-9]\d{9}$/;
+const RE_IDCARD = /^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/;
+
+/** 列表加载占位：spinner + 文案 */
+function loadingHtml(tip) {
+  return `<div class="loading-box"><div class="spinner" aria-hidden="true"></div><div>${esc(tip || '加载中…')}</div></div>`;
+}
+
+/**
+ * 空列表行：暂无数据 + 可选引导按钮
+ * @param {number} colspan
+ * @param {string} tip
+ * @param {string} [actionHtml]
+ */
+function emptyRow(colspan, tip, actionHtml) {
+  return `<tr class="empty-row"><td colspan="${colspan}">
+    <div class="empty-tip">${esc(tip || '暂无数据')}</div>
+    ${actionHtml ? `<div class="empty-actions">${actionHtml}</div>` : ''}
+  </td></tr>`;
+}
+
+/**
+ * 按钮防重复提交：执行中 disabled + 文案「处理中…」
+ * @param {HTMLElement} btn
+ * @param {() => Promise<any>} fn
+ * @param {string} [loadingText]
+ */
+async function withBtnLoading(btn, fn, loadingText) {
+  if (!btn || btn.disabled) return;
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = loadingText || '处理中…';
+  try {
+    return await fn();
+  } finally {
+    if (btn.isConnected) {
+      btn.disabled = false;
+      btn.textContent = oldText;
+    }
+  }
+}
+
+/** 清除弹窗内字段错误样式与红字 */
+function clearFieldErrors(root) {
+  const scope = root || $('#modalBox') || document;
+  scope.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  scope.querySelectorAll('.field-err-msg').forEach(el => el.remove());
+}
+
+/** 给字段标红并显示下方错误文案 */
+function setFieldError(input, msg) {
+  if (!input) return;
+  input.classList.add('field-error');
+  const group = input.closest('.f-group') || input.parentElement;
+  if (!group) return;
+  let tip = group.querySelector('.field-err-msg');
+  if (!tip) {
+    tip = document.createElement('span');
+    tip.className = 'field-err-msg';
+    group.appendChild(tip);
+  }
+  tip.textContent = msg || '请检查该项';
+}
+
+function modal(html) {
+  $('#modalBox').innerHTML = html;
+  $('#modalMask').classList.add('open');
+  // 打开后聚焦第一个可输入控件，便于键盘操作
+  setTimeout(() => {
+    const first = $('#modalBox').querySelector('input:not([type=hidden]):not([type=file]), select, button.primary');
+    if (first) first.focus();
+  }, 30);
+}
+function closeModal() { $('#modalMask').classList.remove('open'); $('#modalBox').innerHTML = ''; }
+$('#modalMask').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+/* Esc 关闭弹窗；Enter（非 textarea）触发主按钮 */
+document.addEventListener('keydown', e => {
+  if (!$('#modalMask').classList.contains('open')) return;
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    closeModal();
+    return;
+  }
+  if (e.key === 'Enter' && e.target && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+    const primary = $('#modalBox .modal-foot .btn.primary') || $('#modalBox .btn.primary');
+    if (primary && !primary.disabled) {
+      e.preventDefault();
+      primary.click();
+    }
+  }
+});
+
+/* ============================================================
+   赛事选择器 / 公共数据
+============================================================ */
+async function loadEvents() {
+  const data = await GET('/event/list?pageNum=1&pageSize=100');
+  state.events = data.list || [];
+  const sel = $('#eventSelect');
+  const prev = state.currentEvent;
+  sel.innerHTML = state.events.map(e => `<option value="${e.id}">${esc(e.eventName)}</option>`).join('');
+  state.currentEvent = (prev && state.events.some(e => e.id === prev)) ? prev : (state.events[0] ? state.events[0].id : null);
+  sel.value = state.currentEvent;
+}
+
+/* ============================================================
+   路由
+============================================================ */
+const routes = {
+  overview: { title: '总览', sub: '赛事全局数据速览', render: renderOverview },
+  events:   { title: '赛事管理', sub: '维护赛事信息与名额', render: renderEvents },
+  runners:  { title: '选手管理', sub: '选手档案与检索', render: renderRunners },
+  registers:{ title: '报名管理', sub: '报名 / 取消 / 分配号码布', render: renderRegisters },
+  results:  { title: '成绩与排名', sub: '总排名 · 男女 · 年龄分组', render: renderResults },
+  stats:    { title: '统计看板', sub: '单场赛事聚合统计', render: renderStats },
+};
+
+function navigate(view) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === view));
+  const r = routes[view];
+  $('#pageTitle').textContent = r.title;
+  $('#pageSub').textContent = r.sub;
+  $('#view').innerHTML = loadingHtml('加载中…');
+  r.render();
+}
+document.querySelectorAll('.nav-item').forEach(n => {
+  n.addEventListener('click', () => navigate(n.dataset.nav));
+  // Enter / Space 对 button 原生已支持；此处兜底兼容
+  n.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(n.dataset.nav);
+    }
+  });
+});
+
+$('#btnRefresh').addEventListener('click', async () => {
+  try { await loadEvents(); const cur = location.hash.replace('#','') || 'overview'; routes[cur] && routes[cur].render(); toast('已刷新'); }
+  catch (e) { toast(e.message, false); }
+});
+$('#eventSelect').addEventListener('change', e => { state.currentEvent = +e.target.value; const cur = location.hash.replace('#','') || 'overview'; routes[cur] && routes[cur].render(); });
+
+/* ============================================================
+   视图：总览
+============================================================ */
+async function renderOverview() {
+  try {
+    if (!state.currentEvent) { $('#view').innerHTML = '<div class="empty">请先创建一场赛事</div>'; return; }
+    const ev = state.events.find(e => e.id === state.currentEvent);
+    const st = await GET('/statistics/eventOverview/' + state.currentEvent);
+    const fill = ev ? Math.min(100, Math.round((ev.registeredCount / Math.max(1, ev.quota)) * 100)) : 0;
+
+    $('#view').innerHTML = `
+      <div class="finish-band"><div class="inner">
+        <div class="cap"><span class="t">${esc(ev.eventName)}</span><span class="s">${esc(ev.startLocation)} · ${ev.eventDate} · ${typeName(ev.eventType)} · ${ev.distanceKm}km</span></div>
+        <div class="finish-meta">
+          <div class="cell"><div class="k">报名进度</div><div class="v">${ev.registeredCount}<small> / ${ev.quota}</small></div></div>
+          <div class="cell"><div class="k">完赛率</div><div class="v gold">${st.finishRate}%</div></div>
+          <div class="cell"><div class="k">平均净成绩</div><div class="v">${st.avgNetTimeStr}</div></div>
+          <div class="cell"><div class="k">剩余名额</div><div class="v">${ev.quota - ev.registeredCount}</div></div>
+        </div>
+        <div class="track"><div class="fill" style="width:${fill}%"></div><div class="ticks">报名进度 ${fill}%</div></div>
+      </div></div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="lab">总报名</div><div class="num">${st.totalRegister}</div><div class="sub">有效报名</div></div>
+        <div class="stat"><div class="lab">完赛人数</div><div class="num" style="--c:var(--green)">${st.finishCount}</div><div class="sub">完赛率 ${st.finishRate}%</div></div>
+        <div class="stat"><div class="lab">未完赛 / 退赛</div><div class="num">${st.unFinishCount}<small> / ${st.retireCount}</small></div><div class="sub">退赛 ${st.retireCount} 人</div></div>
+        <div class="stat"><div class="lab">平均净成绩</div><div class="num gold">${st.avgNetTimeStr}</div><div class="sub">男女 ${st.maleCount} : ${st.femaleCount}</div></div>
+      </div>
+
+      <div class="card" style="margin-top:0">
+        <h3>全部赛事</h3>
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>赛事名称</th><th>类型</th><th>日期</th><th>起点</th><th>距离</th><th>名额</th><th>状态</th></tr></thead>
+          <tbody>
+            ${state.events.map(e => `<tr>
+              <td class="mono">${esc(e.eventName)}</td>
+              <td>${typeName(e.eventType)}</td><td>${e.eventDate}</td><td>${esc(e.startLocation)}</td>
+              <td class="mono">${e.distanceKm}km</td>
+              <td class="mono">${e.registeredCount} / ${e.quota}</td><td>${statusPill(e.status)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>`;
+  } catch (e) { $('#view').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; }
+}
+
+/* ============================================================
+   视图：赛事管理
+============================================================ */
+let evPage = 1, evQuery = {};
+async function renderEvents() {
+  try {
+    const q = new URLSearchParams({ pageNum: evPage, pageSize: 8 });
+    if (evQuery.name) q.set('eventName', evQuery.name);
+    if (evQuery.type) q.set('eventType', evQuery.type);
+    if (evQuery.status) q.set('status', evQuery.status);
+    const data = await GET('/event/list?' + q);
+    const list = data.list || [];
+    const tbody = list.length
+      ? list.map(e => `<tr>
+            <td><img class="cover-thumb" src="${coverSrc(e.coverImage)}" alt="封面" onerror="this.src=COVER_PLACEHOLDER"></td>
+            <td class="mono">${e.id}</td><td class="mono">${esc(e.eventName)}</td>
+            <td>${typeName(e.eventType)}</td><td>${e.eventDate}</td><td>${esc(e.startLocation)}</td>
+            <td class="mono">${e.distanceKm}km</td>
+            <td class="mono">${e.registeredCount} / ${e.quota}</td><td>${statusPill(e.status)}</td>
+            <td><div class="row-actions">
+              <button class="btn sm ghost" data-detail="${e.id}">详情</button>
+              <button class="btn sm ghost" data-edit="${e.id}">编辑</button>
+              <button class="btn sm danger" data-del="${e.id}">删除</button>
+            </div></td>
+          </tr>`).join('')
+      : emptyRow(10, '暂无赛事数据', '<button class="btn primary sm" id="ev_empty_add">＋ 新增赛事</button>');
+
+    $('#view').innerHTML = `
+      <div class="filters">
+        <div class="field"><input id="fName" placeholder="赛事名称" value="${esc(evQuery.name || '')}"></div>
+        <div class="field"><select id="fType"><option value="">全部类型</option><option value="1">全程</option><option value="2">半程</option><option value="3">迷你</option></select></div>
+        <div class="field"><select id="fStatus"><option value="">全部状态</option><option value="0">报名中</option><option value="1">报名截止</option><option value="2">已结束</option></select></div>
+        <button class="btn ghost" id="btnSearch">查询</button>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn primary" id="btnAdd">＋ 新增赛事</button>
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>封面</th><th>ID</th><th>赛事名称</th><th>类型</th><th>日期</th><th>起点</th><th>距离</th><th>报名/名额</th><th>状态</th><th style="width:160px">操作</th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;color:var(--text3);font-size:12px">
+        共 ${data.total} 条 · 第 ${data.pageNum}/${data.pages} 页
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn sm ghost" id="prevPage" ${evPage<=1?'disabled':''}>上一页</button>
+          <button class="btn sm ghost" id="nextPage" ${evPage>=data.pages?'disabled':''}>下一页</button>
+        </div>
+      </div>`;
+
+    $('#btnSearch').onclick = () => { evPage = 1; evQuery = { name: $('#fName').value, type: $('#fType').value, status: $('#fStatus').value }; renderEvents(); };
+    $('#prevPage').onclick = () => { if (evPage > 1) { evPage--; renderEvents(); } };
+    $('#nextPage').onclick = () => { if (evPage < data.pages) { evPage++; renderEvents(); } };
+    const openAdd = () => openEventForm('add');
+    $('#btnAdd').onclick = openAdd;
+    if ($('#ev_empty_add')) $('#ev_empty_add').onclick = openAdd;
+    document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      if (!confirm('确定删除该赛事？')) return;
+      try { await withBtnLoading(b, async () => { await DEL('/event/delete/' + b.dataset.del); toast('已删除'); await loadEvents(); renderEvents(); }); }
+      catch (e) { toast(e.message, false); }
+    });
+    document.querySelectorAll('[data-detail]').forEach(b => b.onclick = async () => {
+      try { const e = await GET('/event/detail/' + b.dataset.detail); showEventDetail(e); } catch (err) { toast(err.message, false); }
+    });
+    document.querySelectorAll('[data-edit]').forEach(b => b.onclick = async () => {
+      try { const e = await GET('/event/detail/' + b.dataset.edit); openEventForm('edit', e); } catch (err) { toast(err.message, false); }
+    });
+  } catch (e) { $('#view').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; }
+}
+function showEventDetail(e) {
+  modal(`<h3>赛事详情 · ${esc(e.eventName)}</h3>
+    <div style="margin-bottom:14px"><img class="cover-preview" src="${coverSrc(e.coverImage)}" alt="封面" onerror="this.src=COVER_PLACEHOLDER" style="width:100%;max-height:180px;height:auto"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+      ${[['类型', typeName(e.eventType)], ['日期', e.eventDate], ['起点', e.startLocation], ['距离', e.distanceKm + ' km'], ['报名费', '¥' + e.entryFee], ['已报名', e.registeredCount], ['总名额', e.quota], ['剩余名额', e.remainQuota]].map(([k, v]) => `<div style="background:var(--bg2);border-radius:9px;padding:10px 12px"><div style="font-size:11px;color:var(--text3)">${k}</div><div class="mono" style="font-weight:600">${v}</div></div>`).join('')}
+    </div>
+    <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">关闭</button><button class="btn primary" id="ev_detail_edit">编辑</button></div>`);
+  $('#ev_detail_edit').onclick = () => openEventForm('edit', e);
+}
+
+/* ============================================================
+   视图：选手管理
+============================================================ */
+let rnPage = 1, rnQuery = {};
+/** 选手新增 / 编辑弹窗 */
+function openRunnerForm(mode, runner) {
+  const isEdit = mode === 'edit' && runner;
+  modal(`
+  <h3>${isEdit ? '编辑选手档案' : '新增选手档案'}</h3>
+  <div class="form-grid">
+    <div class="f-group"><label>姓名<span class="req">*</span></label><input id="rn_name_i" placeholder="姓名" value="${esc(isEdit ? runner.name : '')}"></div>
+    <div class="f-group"><label>性别<span class="req">*</span></label><select id="rn_gender"><option value="1">男</option><option value="2">女</option></select></div>
+    <div class="f-group full"><label>身份证号<span class="req">*</span></label><input id="rn_idcard" placeholder="18 位身份证号" value="${esc(isEdit ? (runner.idCard || '') : '')}"></div>
+    <div class="f-group"><label>手机号<span class="req">*</span></label><input id="rn_phone_i" placeholder="手机号" value="${esc(isEdit ? (runner.phone || '') : '')}"></div>
+    <div class="f-group"><label>出生日期<span class="req">*</span></label><input id="rn_birth" type="date" value="${isEdit ? (runner.birthDate || '') : ''}"></div>
+    <div class="f-group full"><label>紧急联系人及电话</label><input id="rn_ec" placeholder="姓名,电话" value="${esc(isEdit ? (runner.emergencyContact || '') : '')}"></div>
+  </div>
+  <div class="modal-foot"><button class="btn ghost" type="button" onclick="closeModal()">取消</button><button class="btn primary" type="button" id="rn_save">保存</button></div>`);
+  if (isEdit) $('#rn_gender').value = String(runner.gender ?? 1);
+
+  $('#rn_save').onclick = () => withBtnLoading($('#rn_save'), async () => {
+    try {
+      clearFieldErrors();
+      const name = ($('#rn_name_i').value || '').trim();
+      const idCard = ($('#rn_idcard').value || '').trim();
+      const phone = ($('#rn_phone_i').value || '').trim();
+      const birthDate = $('#rn_birth').value;
+      let ok = true;
+      if (!name) { setFieldError($('#rn_name_i'), '姓名不能为空'); ok = false; }
+      if (!RE_IDCARD.test(idCard)) { setFieldError($('#rn_idcard'), '身份证号格式不正确'); ok = false; }
+      if (!RE_PHONE.test(phone)) { setFieldError($('#rn_phone_i'), '手机号格式不正确'); ok = false; }
+      if (!birthDate) { setFieldError($('#rn_birth'), '出生日期不能为空'); ok = false; }
+      if (!ok) { toast('请检查标红字段', false); return; }
+
+      const payload = {
+        name, gender: +$('#rn_gender').value, idCard, phone, birthDate,
+        emergencyContact: $('#rn_ec').value
+      };
+      if (isEdit) {
+        payload.id = runner.id;
+        await PUT('/runner/update', payload);
+        toast('选手已更新');
+      } else {
+        await POST('/runner/add', payload);
+        toast('选手已创建');
+      }
+      closeModal();
+      renderRunners();
+    } catch (e) { toast(e.message, false); }
+  });
+}
+
+async function renderRunners() {
+  try {
+    const q = new URLSearchParams({ pageNum: rnPage, pageSize: 8 });
+    if (rnQuery.name) q.set('name', rnQuery.name);
+    if (rnQuery.phone) q.set('phone', rnQuery.phone);
+    const data = await GET('/runner/list?' + q);
+    const list = data.list || [];
+    const tbody = list.length
+      ? list.map(r => `<tr>
+            <td class="mono">${r.id}</td><td class="mono">${esc(r.name)}</td>
+            <td>${r.gender === 1 ? '男' : '女'}</td><td class="mono">${r.phone}</td><td class="mono">${r.birthDate}</td>
+            <td>${esc(r.emergencyContact)}</td>
+            <td><div class="row-actions">
+              <button class="btn sm ghost" data-edit="${r.id}">编辑</button>
+              <button class="btn sm danger" data-del="${r.id}">删除</button>
+            </div></td>
+          </tr>`).join('')
+      : emptyRow(7, '暂无选手数据', '<button class="btn primary sm" id="rn_empty_add">＋ 新增选手</button>');
+
+    $('#view').innerHTML = `
+      <div class="filters">
+        <div class="field"><input id="rn_name" placeholder="姓名" value="${esc(rnQuery.name || '')}"></div>
+        <div class="field"><input id="rn_phone" placeholder="手机号" value="${esc(rnQuery.phone || '')}"></div>
+        <button class="btn ghost" id="rn_search">查询</button>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn primary" id="rn_add">＋ 新增选手</button>
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>姓名</th><th>性别</th><th>手机号</th><th>出生日期</th><th>紧急联系人</th><th style="width:120px">操作</th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;color:var(--text3);font-size:12px">
+        共 ${data.total} 条 · 第 ${data.pageNum}/${data.pages} 页
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn sm ghost" id="rn_prev" ${rnPage<=1?'disabled':''}>上一页</button>
+          <button class="btn sm ghost" id="rn_next" ${rnPage>=data.pages?'disabled':''}>下一页</button>
+        </div>
+      </div>`;
+
+    $('#rn_search').onclick = () => { rnPage = 1; rnQuery = { name: $('#rn_name').value, phone: $('#rn_phone').value }; renderRunners(); };
+    $('#rn_prev').onclick = () => { if (rnPage > 1) { rnPage--; renderRunners(); } };
+    $('#rn_next').onclick = () => { if (rnPage < data.pages) { rnPage++; renderRunners(); } };
+    const openAdd = () => openRunnerForm('add');
+    $('#rn_add').onclick = openAdd;
+    if ($('#rn_empty_add')) $('#rn_empty_add').onclick = openAdd;
+    document.querySelectorAll('[data-edit]').forEach(b => b.onclick = async () => {
+      try {
+        const r = await GET('/runner/detail/' + b.dataset.edit);
+        openRunnerForm('edit', r);
+      } catch (e) { toast(e.message, false); }
+    });
+    document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      if (!confirm('确定删除该选手？')) return;
+      try { await withBtnLoading(b, async () => { await DEL('/runner/delete/' + b.dataset.del); toast('已删除'); renderRunners(); }); }
+      catch (e) { toast(e.message, false); }
+    });
+  } catch (e) { $('#view').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; }
+}
+
+/* ============================================================
+   视图：报名管理
+============================================================ */
+let rgPage = 1, rgQuery = {};
+async function renderRegisters() {
+  try {
+    const q = new URLSearchParams({ pageNum: rgPage, pageSize: 8 });
+    if (rgQuery.eventId) q.set('eventId', rgQuery.eventId);
+    if (rgQuery.name) q.set('name', rgQuery.name);
+    const data = await GET('/register/list?' + q);
+    const list = data.list || [];
+    const tbody = list.length
+      ? list.map(rg => {
+            const st = rg.status === 1 ? '<span class="pill ok">已报名</span>' : rg.status === 2 ? '<span class="pill mute">已取消</span>' : '<span class="pill danger">退赛</span>';
+            const pay = rg.payStatus === 1 ? '<span class="pill ok">已支付</span>' : '<span class="pill warn">未支付</span>';
+            return `<tr>
+              <td class="mono">${rg.id}</td><td class="mono">${esc(rg.runner.name)}</td><td>${esc(rg.event.eventName)}</td>
+              <td class="mono">${rg.bibNumber || '—'}</td><td class="mono">${rg.registerTime || ''}</td>
+              <td>${pay}</td><td>${st}</td>
+              <td><div class="row-actions">
+                <button class="btn sm ghost" data-bib="${rg.id}">号码布</button>
+                <button class="btn sm danger" data-cancel="${rg.id}">取消</button>
+              </div></td>
+            </tr>`;
+          }).join('')
+      : emptyRow(8, '暂无报名记录', '<button class="btn primary sm" id="rg_empty_add">＋ 提交报名</button>');
+
+    $('#view').innerHTML = `
+      <div class="filters">
+        <div class="field"><select id="rg_ev"><option value="">全部赛事</option>${state.events.map(e => `<option value="${e.id}">${esc(e.eventName)}</option>`).join('')}</select></div>
+        <div class="field"><input id="rg_name" placeholder="选手姓名" value="${esc(rgQuery.name || '')}"></div>
+        <button class="btn ghost" id="rg_search">查询</button>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn ghost" id="rg_export">导出 Excel</button>
+        <button class="btn primary" id="rg_add">＋ 提交报名</button>
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>报名ID</th><th>选手</th><th>赛事</th><th>号码布</th><th>报名时间</th><th>支付</th><th>状态</th><th style="width:150px">操作</th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;color:var(--text3);font-size:12px">
+        共 ${data.total} 条 · 第 ${data.pageNum}/${data.pages} 页
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn sm ghost" id="rg_prev" ${rgPage<=1?'disabled':''}>上一页</button>
+          <button class="btn sm ghost" id="rg_next" ${rgPage>=data.pages?'disabled':''}>下一页</button>
+        </div>
+      </div>`;
+
+    if (rgQuery.eventId) $('#rg_ev').value = rgQuery.eventId;
+    $('#rg_search').onclick = () => { rgPage = 1; rgQuery = { eventId: $('#rg_ev').value || null, name: $('#rg_name').value }; renderRegisters(); };
+    $('#rg_prev').onclick = () => { if (rgPage > 1) { rgPage--; renderRegisters(); } };
+    $('#rg_next').onclick = () => { if (rgPage < data.pages) { rgPage++; renderRegisters(); } };
+    $('#rg_export').onclick = async () => {
+      const eid = $('#rg_ev').value || state.currentEvent;
+      if (!eid) { toast('请先选择要导出的赛事', false); return; }
+      try {
+        await downloadExcel('/register/export?eventId=' + eid, '报名名单.xlsx');
+        toast('报名名单已导出');
+      } catch (e) { toast(e.message, false); }
+    };
+    const openRegister = () => {
+      modal(`
+      <h3>提交赛事报名</h3>
+      <div class="form-grid">
+        <div class="f-group full"><label>赛事<span class="req">*</span></label><select id="rg_sub_ev">${state.events.map(e => `<option value="${e.id}">${esc(e.eventName)}</option>`).join('')}</select></div>
+        <div class="f-group full"><label>选手 ID<span class="req">*</span></label><input id="rg_sub_runner" placeholder="输入选手 ID" type="number"></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" type="button" onclick="closeModal()">取消</button><button class="btn primary" type="button" id="rg_sub_save">提交报名</button></div>`);
+      $('#rg_sub_save').onclick = () => withBtnLoading($('#rg_sub_save'), async () => {
+        try {
+          clearFieldErrors();
+          const eventId = +$('#rg_sub_ev').value;
+          const runnerId = +$('#rg_sub_runner').value;
+          let ok = true;
+          if (!eventId) { setFieldError($('#rg_sub_ev'), '请选择赛事'); ok = false; }
+          if (!runnerId) { setFieldError($('#rg_sub_runner'), '选手 ID 不能为空'); ok = false; }
+          if (!ok) { toast('请检查标红字段', false); return; }
+          const d = await POST('/register/submit', { eventId, runnerId });
+          toast('报名成功，报名ID ' + d.registrationId);
+          closeModal();
+          renderRegisters();
+        } catch (e) { toast(e.message, false); }
+      });
+    };
+    $('#rg_add').onclick = openRegister;
+    if ($('#rg_empty_add')) $('#rg_empty_add').onclick = openRegister;
+    document.querySelectorAll('[data-bib]').forEach(b => b.onclick = () => {
+      modal(`<h3>分配号码布</h3>
+        <div class="form-grid"><div class="f-group full"><label>号码布编号<span class="req">*</span></label><input id="bib_no" placeholder="如 A1001"></div></div>
+        <div class="modal-foot"><button class="btn ghost" type="button" onclick="closeModal()">取消</button><button class="btn primary" type="button" id="bib_save">分配</button></div>`);
+      $('#bib_save').onclick = () => withBtnLoading($('#bib_save'), async () => {
+        try {
+          clearFieldErrors();
+          const bib = ($('#bib_no').value || '').trim();
+          if (!bib) { setFieldError($('#bib_no'), '号码布不能为空'); toast('请检查标红字段', false); return; }
+          const v = await PUT('/register/bib', { registrationId: +b.dataset.bib, bibNumber: bib });
+          toast('已分配 ' + v); closeModal(); renderRegisters();
+        } catch (e) { toast(e.message, false); }
+      });
+    });
+    document.querySelectorAll('[data-cancel]').forEach(b => b.onclick = async () => {
+      if (!confirm('确定取消该报名？')) return;
+      try {
+        await withBtnLoading(b, async () => {
+          await POST('/register/cancel', { registrationId: +b.dataset.cancel });
+          toast('已取消报名');
+          renderRegisters();
+        });
+      } catch (e) { toast(e.message, false); }
+    });
+  } catch (e) { $('#view').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; }
+}
+
+/* ============================================================
+   视图：成绩与排名
+============================================================ */
+let resTab = 'total';
+async function renderResults() {
+  if (!state.currentEvent) { $('#view').innerHTML = '<div class="empty">请先创建赛事</div>'; return; }
+  const ev = state.events.find(e => e.id === state.currentEvent);
+  $('#view').innerHTML = `
+    <div class="tabs">
+      <button type="button" class="tab ${resTab==='total'?'active':''}" data-tab="total">总排名</button>
+      <button type="button" class="tab ${resTab==='gender'?'active':''}" data-tab="gender">男女分组</button>
+      <button type="button" class="tab ${resTab==='age'?'active':''}" data-tab="age">年龄分组</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn ghost sm" id="res_export">导出 Excel</button>
+      <button class="btn primary sm" id="res_input">＋ 录入成绩</button>
+    </div>
+    <div id="resBody">${loadingHtml('加载中…')}</div>`;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => { resTab = t.dataset.tab; renderResults(); };
+  });
+  $('#res_export').onclick = async () => {
+    if (!state.currentEvent) { toast('请先选择赛事', false); return; }
+    try {
+      await downloadExcel('/result/export?eventId=' + state.currentEvent, '成绩排名.xlsx');
+      toast('成绩排名已导出');
+    } catch (e) { toast(e.message, false); }
+  };
+  $('#res_input').onclick = () => {
+    modal(`
+    <h3>录入比赛成绩</h3>
+    <div class="form-grid">
+      <div class="f-group full"><label>报名记录 ID<span class="req">*</span></label><input id="res_reg" type="number" placeholder="报名记录ID"></div>
+      <div class="f-group"><label>枪声成绩(秒)<span class="req">*</span></label><input id="res_chip" type="number" placeholder="如 12800"></div>
+      <div class="f-group"><label>净成绩(秒)<span class="req">*</span></label><input id="res_net" type="number" placeholder="如 12550"></div>
+      <div class="f-group"><label>完赛状态<span class="req">*</span></label><select id="res_fs"><option value="1">完赛</option><option value="2">未完赛</option><option value="3">退赛</option></select></div>
+      <div class="f-group"><label>完赛时间<span class="req">*</span></label><input id="res_ft" placeholder="2026-11-15 10:29:00"></div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" type="button" onclick="closeModal()">取消</button><button class="btn primary" type="button" id="res_save">保存</button></div>`);
+    $('#res_save').onclick = () => withBtnLoading($('#res_save'), async () => {
+      try {
+        clearFieldErrors();
+        const registrationId = +$('#res_reg').value;
+        const chipTime = +$('#res_chip').value;
+        const netTime = +$('#res_net').value;
+        const finishStatus = +$('#res_fs').value;
+        const finishTime = ($('#res_ft').value || '').trim();
+        let ok = true;
+        if (!registrationId) { setFieldError($('#res_reg'), '报名记录 ID 不能为空'); ok = false; }
+        if (!chipTime || chipTime <= 0) { setFieldError($('#res_chip'), '枪声成绩必填且须大于 0'); ok = false; }
+        if (!netTime || netTime <= 0) { setFieldError($('#res_net'), '净成绩必填且须大于 0'); ok = false; }
+        if (![1, 2, 3].includes(finishStatus)) { setFieldError($('#res_fs'), '完赛状态须为 1~3'); ok = false; }
+        if (!finishTime) { setFieldError($('#res_ft'), '完赛时间不能为空'); ok = false; }
+        if (!ok) { toast('请检查标红字段', false); return; }
+        await POST('/result/input', { registrationId, chipTime, netTime, finishStatus, finishTime });
+        toast('成绩已录入'); closeModal(); renderResults();
+      } catch (e) { toast(e.message, false); }
+    });
+  };
+
+  try {
+    const evId = state.currentEvent;
+    let html = '';
+    if (resTab === 'total') {
+      const d = await GET('/result/eventRanking/' + evId + '?pageNum=1&pageSize=20');
+      const rows = d.list || [];
+      const top = rows.slice(0, 3);
+      html = `<div class="podium">${top.map((r,i)=>`<div class="spot"><div class="bar">${['GOLD','SILVER','BRONZE'][i]}</div><div class="nm">${esc(r.name)}</div><div class="tm">${r.net_time_str}</div></div>`).join('') || ''}</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>名次</th><th>选手</th><th>性别</th><th>号码布</th><th>净成绩</th><th>完赛用时</th></tr></thead>
+        <tbody>${rows.length ? rows.map(r=>`<tr>
+          <td><span class="rank-badge ${r.rank===1?'r1':r.rank===2?'r2':'other'}">${r.rank}</span></td>
+          <td class="mono">${esc(r.name)}</td><td>${r.gender===1?'男':'女'}</td><td class="mono">${r.bib_number||'—'}</td>
+          <td class="mono">${r.net_time}</td><td class="mono gold">${r.net_time_str}</td>
+        </tr>`).join('') : emptyRow(6, '暂无成绩排名', '<button class="btn primary sm" id="res_empty_input">＋ 录入成绩</button>')}</tbody>
+      </table></div>`;
+    } else if (resTab === 'gender') {
+      const d = await GET('/result/genderRanking/' + evId);
+      const block = (title, list) => `
+        <div class="card" style="margin-bottom:14px"><h3>${title}</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>名次</th><th>选手</th><th>号码布</th><th>净成绩</th><th>用时</th></tr></thead>
+          <tbody>${list.length ? list.map(r=>`<tr>
+            <td><span class="rank-badge ${r.rank===1?'r1':'other'}">${r.rank}</span></td>
+            <td class="mono">${esc(r.name)}</td><td class="mono">${r.bib_number||'—'}</td><td class="mono">${r.net_time}</td><td class="mono gold">${r.net_time_str}</td>
+          </tr>`).join('') : emptyRow(5, '暂无数据')}</tbody>
+        </table></div></div>`;
+      html = block('男子组', d.maleList || []) + block('女子组', d.femaleList || []);
+    } else {
+      const d = await GET('/result/ageRanking/' + evId);
+      const groups = [['≤29', 'group_29below'], ['30-39', 'group_30_39'], ['40-49', 'group_40_49'], ['≥50', 'group_50up']];
+      html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">` + groups.map(([label, key]) => {
+        const list = d[key] || [];
+        return `
+        <div class="card"><h3>${label} 岁</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>名次</th><th>选手</th><th>年龄</th><th>用时</th></tr></thead>
+          <tbody>${list.length ? list.map(r=>`<tr>
+            <td><span class="rank-badge ${r.rank===1?'r1':'other'}">${r.rank}</span></td>
+            <td class="mono">${esc(r.name)}</td><td class="mono">${r.age}</td><td class="mono gold">${r.net_time_str}</td>
+          </tr>`).join('') : emptyRow(4, '暂无数据')}</tbody>
+        </table></div></div>`;
+      }).join('') + `</div>`;
+    }
+    $('#resBody').innerHTML = html;
+    if ($('#res_empty_input')) $('#res_empty_input').onclick = () => $('#res_input').click();
+  } catch (e) { $('#resBody').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; }
+}
+
+/* ============================================================
+   视图：统计看板
+============================================================ */
+async function renderStats() {
+  try {
+    if (!state.currentEvent) { $('#view').innerHTML = '<div class="empty">请先创建赛事</div>'; return; }
+    const st = await GET('/statistics/eventOverview/' + state.currentEvent);
+    const malePct = st.totalRegister ? Math.round(st.maleCount / st.totalRegister * 100) : 0;
+    const femalePct = 100 - malePct;
+    $('#view').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat"><div class="lab">总报名</div><div class="num">${st.totalRegister}</div><div class="sub">有效报名人数</div></div>
+        <div class="stat"><div class="lab">完赛人数</div><div class="num" style="color:var(--green)">${st.finishCount}</div><div class="sub">完赛率 ${st.finishRate}%</div></div>
+        <div class="stat"><div class="lab">未完赛</div><div class="num">${st.unFinishCount}</div><div class="sub">报名未完赛</div></div>
+        <div class="stat"><div class="lab">平均净成绩</div><div class="num gold">${st.avgNetTimeStr}</div><div class="sub">${st.avgNetTime} 秒</div></div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <h3>男女构成</h3>
+        <div style="display:flex;height:26px;border-radius:13px;overflow:hidden;margin-bottom:12px">
+          <div style="width:${malePct}%;background:linear-gradient(90deg,#6CA7F0,#4F8DE0)"></div>
+          <div style="width:${femalePct}%;background:linear-gradient(90deg,#FF9357,#FF6B35)"></div>
+        </div>
+        <div style="display:flex;gap:24px;font-size:13px">
+          <span><b class="mono">${st.maleCount}</b> 男子 (${malePct}%)</span>
+          <span><b class="mono">${st.femaleCount}</b> 女子 (${femalePct}%)</span>
+        </div>
+      </div>`;
+  } catch (e) { $('#view').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; }
+}
+
+/* ============================================================
+   登录 / 退出
+============================================================ */
+async function doLogin() {
+  const username = ($('#loginUser').value || '').trim();
+  const password = $('#loginPass').value || '';
+  $('#loginErr').textContent = '';
+  if (!username || !password) { $('#loginErr').textContent = '请输入用户名和密码'; return; }
+  await withBtnLoading($('#btnLogin'), async () => {
+    try {
+      // 登录接口本身不带 token
+      const data = await POST('/login', { username, password }, { auth: false });
+      if (!data || !data.token) throw new Error('登录响应缺少 token');
+      setToken(data.token);
+      showApp();
+      toast('登录成功');
+      await bootApp();
+    } catch (e) {
+      $('#loginErr').textContent = e.message || '登录失败';
+    }
+  }, '登录中…');
+}
+$('#btnLogin').addEventListener('click', doLogin);
+$('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+$('#loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+$('#btnLogout').addEventListener('click', () => { showLogin(''); toast('已退出登录'); });
+
+let appBooted = false;
+async function bootApp() {
+  await loadEvents();
+  const start = (location.hash || '#overview').replace('#', '');
+  navigate(routes[start] ? start : 'overview');
+  if (!appBooted) {
+    appBooted = true;
+    window.addEventListener('hashchange', () => {
+      const v = (location.hash || '#overview').replace('#', '');
+      if (routes[v]) navigate(v);
+    });
+  }
+}
+
+/* ============================================================
+   启动：先检查 localStorage 是否有 token
+============================================================ */
+(async function init() {
+  if (!getToken()) {
+    showLogin('');
+    return;
+  }
+  try {
+    showApp();
+    await bootApp();
+  } catch (e) {
+    // 启动阶段若因 401 已 showLogin，则不再覆盖；其它错误提示连接问题
+    if (!getToken()) return;
+    showApp();
+    $('#view').innerHTML = `<div class="empty">无法连接后端服务（${esc(e.message)}）<br>请确认 Spring Boot 已在 localhost:8081 运行</div>`;
+  }
+})();
+</script>
+</body>
+</html>
